@@ -1,6 +1,5 @@
-
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
     LayoutGrid,
     FileText,
@@ -24,6 +23,7 @@ interface User {
 
 export function Navbar() {
     const navigate = useNavigate()
+    const location = useLocation()
     const [user, setUser] = useState<User | null>(null)
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -86,9 +86,24 @@ export function Navbar() {
 
                 {/* Middle Section: Navigation */}
                 <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    <NavItem icon={<LayoutGrid size={18} />} label="Página Inicial" active onClick={() => navigate('/')} />
-                    <NavItem icon={<FileText size={18} />} label="Lista de Iniciativas" />
-                    <NavItem icon={<Users size={18} />} label="Usuários" onClick={() => navigate('/users')} />
+                    <NavItem
+                        icon={<LayoutGrid size={18} />}
+                        label="Página Inicial"
+                        active={location.pathname === '/'}
+                        onClick={() => navigate('/')}
+                    />
+                    <NavItem
+                        icon={<FileText size={18} />}
+                        label="Lista de Iniciativas"
+                        active={location.pathname === '/iniciativas'}
+                        onClick={() => navigate('/iniciativas')}
+                    />
+                    <NavItem
+                        icon={<Users size={18} />}
+                        label="Usuários"
+                        active={location.pathname === '/users'}
+                        onClick={() => navigate('/users')}
+                    />
                     <NavItem icon={<PlusCircle size={18} />} label="Novo Cadastro" />
                     <NavItem icon={<ListOrdered size={18} />} label="Priorização" />
                 </nav>
