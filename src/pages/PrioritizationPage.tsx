@@ -1,49 +1,64 @@
-import { useState } from "react";
-import { Info, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Info, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { InitiativesFilter } from "@/components/InitiativesFilter"; // Reusing filter
+import { InitiativesFilter, type FilterState } from "@/components/InitiativesFilter";
 import { PrioritizationList } from "@/components/PrioritizationList";
 import { type PrioritizationItemData } from "@/components/PrioritizationItem";
-
-// Mock Data matching the screenshot
-const initialData: PrioritizationItemData[] = [
-    {
-        id: "1",
-        title: "Automação do processo de admissão",
-        type: "Automação",
-        priority: "Alta",
-        status: "Em Execução",
-        deadline: "14/03/2024"
-    },
-    {
-        id: "2",
-        title: "Portal do colaborador mobile",
-        type: "Novo Projeto",
-        priority: "Média",
-        status: "Devolvida",
-        deadline: "-"
-    },
-    // Adding more items to demonstrate sorting better
-    {
-        id: "3",
-        title: "Dashboard de vendas em tempo real",
-        type: "Novo Projeto",
-        priority: "Média",
-        status: "Em Análise",
-        deadline: "15/01/2024"
-    },
-    {
-        id: "4",
-        title: "Integração SPED Fiscal com ERP",
-        type: "Integração",
-        priority: "Alta",
-        status: "Aprovada",
-        deadline: "08/01/2024"
-    }
-];
+import { initiativesService } from "@/services/initiativesService";
 
 export default function PrioritizationPage() {
-    const [items, setItems] = useState<PrioritizationItemData[]>(initialData);
+    // State
+    const [items, setItems] = useState<PrioritizationItemData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState<FilterState>({
+        search: "",
+        status: "",
+        type: "",
+        sector: "",
+        priority: ""
+    });
+
+    // Fetch Data
+    const fetchInitiatives = async () => {
+        setLoading(true);
+        try {
+            // Clean empty filters before sending
+            const activeFilters: Record<string, string> = {};
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value) activeFilters[key] = value;
+            });
+
+            const data = await initiativesService.getAll(activeFilters);
+
+            // Transform API data to PrioritizationItemData
+            if (Array.isArray(data)) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const mappedItems: PrioritizationItemData[] = data.map((item: any) => ({
+                    id: String(item.id),
+                    title: item.title,
+                    type: item.type,
+                    priority: item.priority || "Baixa",
+                    status: item.status,
+                    deadline: item.deadline || "-"
+                }));
+                setItems(mappedItems);
+            } else {
+                setItems([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch initiatives", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Effects
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchInitiatives();
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [filters]);
 
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 space-y-6">
@@ -54,7 +69,6 @@ export default function PrioritizationPage() {
                     <p className="text-slate-500 mt-1">Recursos Humanos • Ano de Referência: 2025</p>
                 </div>
                 <div className="flex gap-3">
-                    {/* Reiniciar removed as requested */}
                     <Button className="bg-[#7ab035] hover:bg-[#6a992d] text-white font-semibold shadow-sm">
                         <Save className="w-4 h-4 mr-2" />
                         Salvar Priorização
@@ -75,16 +89,21 @@ export default function PrioritizationPage() {
                     <span className="text-sm text-slate-500 font-medium">Filtros</span>
                 </div>
 
-                {/* Simplified filter bar or reusing the existing one which fits well */}
-                <InitiativesFilter />
+                <InitiativesFilter filters={filters} onFilterChange={setFilters} />
 
                 <div className="text-sm text-slate-500 pt-2">
                     {items.length} iniciativas ativas
                 </div>
             </div>
 
-            {/* List */}
-            <PrioritizationList items={items} onReorder={setItems} />
+            {/* List or Loading */}
+            {loading ? (
+                <div className="flex justify-center py-20">
+                    <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                </div>
+            ) : (
+                <PrioritizationList items={items} onReorder={setItems} />
+            )}
 
         </div>
     );

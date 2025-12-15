@@ -1,24 +1,63 @@
-import { ArrowLeft, Lightbulb, Save, Send } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Lightbulb, Save, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { initiativesService } from "@/services/initiativesService";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
-    DialogClose
+    DialogDescription
 } from "@/components/ui/dialog";
 
 interface NewInitiativeModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onSuccess?: () => void;
 }
 
-export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalProps) {
+export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiativeModalProps) {
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        title: "",
+        description: "",
+        benefits: "",
+        type: "",
+        priority: "",
+        deadline: "",
+        sector: "rh" // Default
+    });
+
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        try {
+            await initiativesService.create({
+                title: formData.title,
+                description: formData.description,
+                benefits: formData.benefits,
+                type: formData.type, // Map value if needed
+                priority: formData.priority, // Map value if needed
+                sector: formData.sector, // Map value if needed
+                deadline: formData.deadline
+            });
+            onSuccess?.();
+            onOpenChange(false);
+        } catch (error) {
+            console.error("Error creating initiative", error);
+            // toast error
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-[1100px] h-[90vh] bg-slate-50/50 flex flex-col gap-0 p-0">
@@ -60,7 +99,12 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="title">Título da Iniciativa <span className="text-red-500">*</span></Label>
-                                        <Input id="title" placeholder="Ex: Automação do processo de admissão" />
+                                        <Input
+                                            id="title"
+                                            placeholder="Ex: Automação do processo de admissão"
+                                            value={formData.title}
+                                            onChange={(e) => handleChange("title", e.target.value)}
+                                        />
                                     </div>
 
                                     <div className="space-y-2">
@@ -69,6 +113,8 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                                             id="description"
                                             placeholder="Descreva em detalhes a iniciativa, seus objetivos e escopo..."
                                             className="min-h-[120px]"
+                                            value={formData.description}
+                                            onChange={(e) => handleChange("description", e.target.value)}
                                         />
                                     </div>
 
@@ -78,6 +124,8 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                                             id="benefits"
                                             placeholder="Descreva os benefícios esperados com a implementação desta iniciativa..."
                                             className="min-h-[100px]"
+                                            value={formData.benefits}
+                                            onChange={(e) => handleChange("benefits", e.target.value)}
                                         />
                                     </div>
                                 </div>
@@ -98,28 +146,42 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="type">Tipo de Iniciativa <span className="text-red-500">*</span></Label>
-                                        <Select id="type">
+                                        <Select
+                                            id="type"
+                                            value={formData.type}
+                                            onChange={(e) => handleChange("type", e.target.value)}
+                                        >
                                             <option value="" disabled selected>Selecione o tipo</option>
-                                            <option value="automacao">Automação</option>
-                                            <option value="integracao">Integração</option>
-                                            <option value="melhoria">Melhoria</option>
-                                            <option value="novo_projeto">Novo Projeto</option>
+                                            <option value="Automação">Automação</option>
+                                            <option value="Integração">Integração</option>
+                                            <option value="Melhoria">Melhoria</option>
+                                            <option value="Novo Projeto">Novo Projeto</option>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="criticality">Criticidade / Impacto <span className="text-red-500">*</span></Label>
-                                        <Select id="criticality">
+                                        <Select
+                                            id="criticality"
+                                            value={formData.priority}
+                                            onChange={(e) => handleChange("priority", e.target.value)}
+                                        >
                                             <option value="" disabled selected>Selecione a criticidade</option>
-                                            <option value="alta">Alta</option>
-                                            <option value="media">Média</option>
-                                            <option value="baixa">Baixa</option>
+                                            <option value="Alta">Alta</option>
+                                            <option value="Média">Média</option>
+                                            <option value="Baixa">Baixa</option>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="deadline">Prazo Desejado <span className="text-slate-400 font-normal">(opcional)</span></Label>
-                                        <Input id="deadline" type="date" className="w-full" />
+                                        <Input
+                                            id="deadline"
+                                            type="date"
+                                            className="w-full"
+                                            value={formData.deadline}
+                                            onChange={(e) => handleChange("deadline", e.target.value)}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -155,7 +217,12 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                             {/* Requester Sector */}
                             <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
                                 <Label htmlFor="sector" className="text-base font-semibold">Setor Solicitante</Label>
-                                <Select id="sector" defaultValue="rh">
+                                <Select
+                                    id="sector"
+                                    defaultValue="rh"
+                                    value={formData.sector}
+                                    onChange={(e) => handleChange("sector", e.target.value)}
+                                >
                                     <option value="rh">Recursos Humanos</option>
                                     <option value="comercial">Comercial</option>
                                     <option value="ti">Tecnologia da Informação</option>
@@ -167,12 +234,16 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                             <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
                                 <h3 className="font-semibold text-base">Ações</h3>
 
-                                <Button className="w-full bg-[#7ab035] hover:bg-[#6a992d] text-white font-semibold h-11">
-                                    <Send className="w-4 h-4 mr-2" />
+                                <Button
+                                    className="w-full bg-[#7ab035] hover:bg-[#6a992d] text-white font-semibold h-11"
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                >
+                                    {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
                                     Submeter Iniciativa
                                 </Button>
 
-                                <Button variant="outline" className="w-full h-11">
+                                <Button variant="outline" className="w-full h-11" disabled={loading}>
                                     <Save className="w-4 h-4 mr-2" />
                                     Salvar como Rascunho
                                 </Button>
@@ -181,6 +252,7 @@ export function NewInitiativeModal({ open, onOpenChange }: NewInitiativeModalPro
                                     variant="ghost"
                                     className="w-full text-slate-500 hover:text-red-600 hover:bg-red-50"
                                     onClick={() => onOpenChange(false)}
+                                    disabled={loading}
                                 >
                                     Cancelar
                                 </Button>
