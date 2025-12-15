@@ -12,6 +12,7 @@ import {
     LogOut
 } from 'lucide-react'
 import { authApi } from '@/api/auth'
+import logoSenior from '@/assets/logo_senior.svg'
 
 interface User {
     id: number
@@ -21,12 +22,23 @@ interface User {
     updated_at: string
 }
 
+interface UserType {
+    id: number
+    name: string
+    description: string
+    created_at: string
+    updated_at: string
+}
+
 export function Navbar() {
     const navigate = useNavigate()
     const location = useLocation()
     const [user, setUser] = useState<User | null>(null)
+    const [userTypes, setUserTypes] = useState<UserType[]>([])
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
+
+    const isAdmin = userTypes.some((type) => type.name === 'admin')
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user')
@@ -35,6 +47,15 @@ export function Navbar() {
                 setUser(JSON.parse(storedUser))
             } catch (e) {
                 console.error('Failed to parse user from local storage:', e)
+            }
+        }
+
+        const storedUserTypes = localStorage.getItem('user_types')
+        if (storedUserTypes) {
+            try {
+                setUserTypes(JSON.parse(storedUserTypes))
+            } catch (e) {
+                console.error('Failed to parse user types from local storage:', e)
             }
         }
     }, [])
@@ -72,11 +93,9 @@ export function Navbar() {
             <div className="w-full px-4 h-16 flex items-center justify-between gap-4">
                 {/* Left Section: Logo & Brand */}
                 <div className="flex items-center gap-3 shrink-0">
-                    <div className="bg-[var(--primary)] w-8 h-8 rounded-md flex items-center justify-center text-white font-bold text-lg select-none">
-                        S
-                    </div>
+                    <img src={logoSenior} alt="Senior Logo" className="h-8 w-auto" />
                     <div className="flex items-center gap-3">
-                        <span className="text-[var(--primary)] font-bold text-xl tracking-tight leading-none">Senior</span>
+                        {/* <span className="text-[var(--primary)] font-bold text-xl tracking-tight leading-none">Senior</span> */}
                         <div className="h-5 w-px bg-gray-600 hidden md:block"></div>
                         <span className="text-gray-300 text-sm hidden lg:block font-medium">
                             Portal de Iniciativas - TI Corporativa
@@ -85,7 +104,7 @@ export function Navbar() {
                 </div>
 
                 {/* Middle Section: Navigation */}
-                <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <nav className="flex items-center gap-1 xl:gap-2">
                     <NavItem
                         icon={<LayoutGrid size={18} />}
                         label="Página Inicial"
@@ -98,12 +117,14 @@ export function Navbar() {
                         active={location.pathname === '/iniciativas'}
                         onClick={() => navigate('/iniciativas')}
                     />
-                    <NavItem
-                        icon={<Users size={18} />}
-                        label="Usuários"
-                        active={location.pathname === '/users'}
-                        onClick={() => navigate('/users')}
-                    />
+                    {isAdmin && (
+                        <NavItem
+                            icon={<Users size={18} />}
+                            label="Usuários"
+                            active={location.pathname === '/users'}
+                            onClick={() => navigate('/users')}
+                        />
+                    )}
                     <NavItem icon={<PlusCircle size={18} />} label="Novo Cadastro" />
                     <NavItem icon={<ListOrdered size={18} />} label="Priorização" />
                 </nav>
@@ -170,8 +191,9 @@ function NavItem({ icon, label, active = false, onClick }: { icon: React.ReactNo
         <button
             type="button"
             onClick={onClick}
+            title={label}
             className={`
-             flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+             flex items-center justify-center gap-2 p-2 xl:px-4 xl:py-2 rounded-md text-sm font-medium transition-all duration-200
              ${active
                     ? 'bg-[var(--primary)] text-white shadow-sm hover:opacity-90'
                     : 'text-gray-300 hover:bg-white/5 hover:text-white'
@@ -179,7 +201,7 @@ function NavItem({ icon, label, active = false, onClick }: { icon: React.ReactNo
            `}
         >
             {icon}
-            <span className="whitespace-nowrap">{label}</span>
+            <span className="hidden xl:inline whitespace-nowrap">{label}</span>
         </button>
     )
 }
