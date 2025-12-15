@@ -126,7 +126,12 @@ export function Navbar() {
                         />
                     )}
                     <NavItem icon={<PlusCircle size={18} />} label="Novo Cadastro" />
-                    <NavItem icon={<ListOrdered size={18} />} label="Priorização" />
+                    <NavItem
+                        icon={<ListOrdered size={18} />}
+                        label="Priorização"
+                        active={location.pathname === '/priorizacao'}
+                        onClick={() => navigate('/priorizacao')}
+                    />
                 </nav>
 
                 {/* Right Section: Actions & Profile */}
@@ -143,7 +148,7 @@ export function Navbar() {
 
                     {user ? (
                         <div className="relative" ref={dropdownRef}>
-                            <div 
+                            <div
                                 className="flex items-center gap-3 border border-gray-600 rounded-full pl-1.5 pr-4 py-1.5 cursor-pointer hover:bg-gray-700/50 transition-colors group"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             >
@@ -154,12 +159,12 @@ export function Navbar() {
                                     <span className="text-xs font-bold leading-tight text-white">{user.name}</span>
                                     <span className="text-[10px] text-gray-400 leading-tight truncate max-w-[80px]">Gestor</span>
                                 </div>
-                                <ChevronDown 
-                                    size={14} 
-                                    className={`text-gray-400 group-hover:text-white transition-all duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                                <ChevronDown
+                                    size={14}
+                                    className={`text-gray-400 group-hover:text-white transition-all duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
                                 />
                             </div>
-                            
+
                             {/* Dropdown Menu */}
                             {isDropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-[#2a3038] border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
