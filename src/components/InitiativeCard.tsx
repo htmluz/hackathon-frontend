@@ -16,8 +16,9 @@ export interface Initiative {
   date?: string;
 }
 
-interface InitiativeCardProps {
+export interface InitiativeCardProps {
   data: Initiative;
+  compact?: boolean;
 }
 
 const statusConfig: Record<InitiativeStatus, { color: string; icon: React.ElementType; bg: string }> = {
@@ -35,26 +36,26 @@ const priorityConfig = {
   "Baixa": { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle },
 };
 
-export function InitiativeCard({ data }: InitiativeCardProps) {
+export function InitiativeCard({ data, compact = false }: InitiativeCardProps) {
   const initiative = data;
   const status = statusConfig[initiative.status] || statusConfig["Em Análise"];
   const priority = priorityConfig[initiative.priority] || priorityConfig["Média"];
   const StatusIcon = status.icon;
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
+    <Card className={cn("cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1", compact && "shadow-none border-slate-200 hover:shadow-md")}>
+      <CardHeader className={cn("pb-3", compact && "p-4 pb-2")}>
         <div className="flex justify-between items-start gap-4">
-          <CardTitle className="text-lg font-bold text-slate-800 leading-tight">
+          <CardTitle className={cn("font-bold text-slate-800 leading-tight", compact ? "text-base" : "text-lg")}>
             {initiative.title}
           </CardTitle>
-          <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", status.bg, status.color)}>
-            <StatusIcon className="w-3.5 h-3.5" />
+          <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap", status.bg, status.color, compact && "px-2 py-0.5 text-[10px]")}>
+            <StatusIcon className={cn("w-3.5 h-3.5", compact && "w-3 h-3")} />
             <span>{initiative.status}</span>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pb-4 space-y-4">
+      <CardContent className={cn("pb-4 space-y-4", compact && "p-4 pt-0 pb-3 space-y-2")}>
         <div className="flex flex-wrap gap-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
             <FileText className="w-3.5 h-3.5" />
@@ -66,11 +67,11 @@ export function InitiativeCard({ data }: InitiativeCardProps) {
           </div>
         </div>
 
-        <p className="text-sm text-slate-600 line-clamp-3">
+        <p className={cn("text-slate-600", compact ? "text-xs line-clamp-2" : "text-sm line-clamp-3")}>
           {initiative.description}
         </p>
       </CardContent>
-      <CardFooter className="pt-0 text-xs text-slate-500 flex flex-col items-start gap-2">
+      <CardFooter className={cn("pt-0 text-xs text-slate-500 flex items-start gap-2", compact ? "p-4 pt-0 flex-row flex-wrap gap-x-4" : "flex-col")}>
         <div className="flex items-center gap-2">
           <Building2 className="w-4 h-4 text-slate-400" />
           <span>{initiative.sector}</span>

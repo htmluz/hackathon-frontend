@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import logoSenior from '@/assets/logo_senior.svg'
 
 interface LocationState {
   from?: { pathname: string }
@@ -70,35 +71,12 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-6">
-            <svg
-              className="w-8 h-8 text-primary-foreground"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
-            Bem-vindo de volta
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            Entre na sua conta para continuar
-          </p>
+          <img src={logoSenior} alt="Senior Logo" className="h-16 w-auto mx-auto mb-6" />
         </div>
 
         <Card className="border-border/40 shadow-xl">
           <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>
-              Digite suas credenciais para acessar a plataforma
-            </CardDescription>
+            <CardTitle className="text-center text-2xl font-bold">Portal de Iniciativas - TIC</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,9 +127,9 @@ export default function Login() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center border-t p-4">
+          <CardFooter className="flex justify-center border-t p-0">
             <p className="text-xs text-muted-foreground">
-              Hackathon 2025
+              Hackathon Senior Sistemas - 2025
             </p>
           </CardFooter>
         </Card>

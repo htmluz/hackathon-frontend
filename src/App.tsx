@@ -5,6 +5,8 @@ import Login from './pages/Login'
 import Users from './pages/Users'
 import InitiativesPage from './pages/InitiativesPage'
 import PrioritizationPage from './pages/PrioritizationPage'
+import AprovacaoPage from './pages/AprovacaoPage'
+import FAQ from './pages/FAQ'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Navbar } from './components/Navbar'
 
@@ -45,6 +47,16 @@ function App() {
           <Route path="/priorizacao" element={
             <ProtectedRoute>
               <PrioritizationPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/faq" element={
+            <ProtectedRoute>
+              <FAQ />
+            </ProtectedRoute>
+          } />
+          <Route path="/aprovacao" element={
+            <ProtectedRoute>
+              <AprovacaoPage />
             </ProtectedRoute>
           } />
         </Routes>
