@@ -1,0 +1,421 @@
+{
+  "info": {
+    "name": "Hackathon Backend API",
+    "_postman_id": "hackathon-backend-2024",
+    "description": "API completa com autenticação, CRUD de usuários e iniciativas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm. test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@hackathon. com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name":  "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "logout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name":  "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Personal Information",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/personal-information",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "personal-information"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name":  "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key":  "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode":  "raw",
+              "raw":  "{\n  \"old_password\": \"admin123\",\n  \"new_password\": \"novaSenha123\"\n}"
+            },
+            "url":  {
+              "raw": "{{base_url}}/api/private/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "change-password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/users",
+              "host":  ["{{base_url}}"],
+              "path": ["api", "private", "users"]
+            }
+          },
+          "response":  []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "users", "1"]
+            }
+          },
+          "response":  []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"novo.usuario@exemplo.com\",\n  \"name\": \"Novo Usuário\",\n  \"password\": \"senha123\",\n  \"type_ids\": [2]\n}"
+            },
+            "url": {
+              "raw":  "{{base_url}}/api/private/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value":  "application/json"
+              }
+            ],
+            "body":  {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nome Atualizado\",\n  \"email\": \"email. atualizado@exemplo.com\",\n  \"type_ids\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/private/users/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "users", "2"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw":  "{{base_url}}/api/private/users/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "users", "2"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Types & Permissions",
+      "item":  [
+        {
+          "name": "Get All User Types",
+          "request":  {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/user-types",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "user-types"]
+            }
+          },
+          "response":  []
+        },
+        {
+          "name": "Assign User Type",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/admin/users/2/types/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "admin", "users", "2", "types", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove User Type",
+          "request":  {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/admin/users/2/types/1",
+              "host": ["{{base_url}}"],
+              "path":  ["api", "private", "admin", "users", "2", "types", "1"]
+            }
+          },
+          "response":  []
+        }
+      ]
+    },
+    {
+      "name": "Initiatives",
+      "item": [
+        {
+          "name": "List Initiatives",
+          "request":  {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/initiatives",
+              "host": ["{{base_url}}"],
+              "path":  ["api", "private", "initiatives"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name":  "List Initiatives with Filters",
+          "request":  {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/initiatives?search=automação&status=Em Execução&type=Automação&priority=Alta&sector=Recursos Humanos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "initiatives"],
+              "query": [
+                {
+                  "key": "search",
+                  "value":  "automação"
+                },
+                {
+                  "key":  "status",
+                  "value": "Em Execução"
+                },
+                {
+                  "key": "type",
+                  "value": "Automação"
+                },
+                {
+                  "key": "priority",
+                  "value": "Alta"
+                },
+                {
+                  "key": "sector",
+                  "value": "Recursos Humanos"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Initiative by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/initiatives/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "initiatives", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Initiative",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value":  "application/json"
+              }
+            ],
+            "body":  {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Nova Iniciativa de Teste\",\n  \"description\": \"Esta é uma descrição completa da iniciativa que precisa ter pelo menos 20 caracteres\",\n  \"benefits\": \"Benefícios esperados com esta iniciativa incluem automação e eficiência\",\n  \"type\": \"Automação\",\n  \"priority\":  \"Alta\",\n  \"sector\": \"Tecnologia da Informação\",\n  \"deadline\": \"2024-12-31\"\n}"
+            },
+            "url": {
+              "raw":  "{{base_url}}/api/private/initiatives",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "initiatives"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Initiative",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value":  "application/json"
+              }
+            ],
+            "body":  {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Título Atualizado da Iniciativa\",\n  \"priority\": \"Média\",\n  \"deadline\": \"2025-01-31\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/private/initiatives/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "initiatives", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Initiative",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw":  "{{base_url}}/api/private/initiatives/7",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "initiatives", "7"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name":  "Change Initiative Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key":  "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode":  "raw",
+              "raw":  "{\n  \"status\":  \"Em Análise\",\n  \"reason\": \"Necessita avaliação técnica\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/private/initiatives/1/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "initiatives", "1", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name":  "My Initiatives",
+          "request":  {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/private/my-initiatives",
+              "host": ["{{base_url}}"],
+              "path": ["api", "private", "my-initiatives"]
+            }
+          },
+          "response":  []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value":  "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

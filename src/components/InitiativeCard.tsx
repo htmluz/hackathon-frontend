@@ -5,19 +5,19 @@ import { cn } from "@/lib/utils";
 export type InitiativeStatus = "Em Execução" | "Em Análise" | "Aprovada" | "Submetida" | "Devolvida" | "Reprovada";
 
 export interface Initiative {
-  id: string;
+  id: string | number;
   title: string;
   status: InitiativeStatus;
   type: string;
   priority: "Alta" | "Média" | "Baixa";
   description: string;
   sector: string;
-  owner: string;
-  date: string;
+  owner?: string;
+  date?: string;
 }
 
 interface InitiativeCardProps {
-  initiative: Initiative;
+  data: Initiative;
 }
 
 const statusConfig: Record<InitiativeStatus, { color: string; icon: React.ElementType; bg: string }> = {
@@ -35,7 +35,8 @@ const priorityConfig = {
   "Baixa": { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle },
 };
 
-export function InitiativeCard({ initiative }: InitiativeCardProps) {
+export function InitiativeCard({ data }: InitiativeCardProps) {
+  const initiative = data;
   const status = statusConfig[initiative.status] || statusConfig["Em Análise"];
   const priority = priorityConfig[initiative.priority] || priorityConfig["Média"];
   const StatusIcon = status.icon;
@@ -55,33 +56,33 @@ export function InitiativeCard({ initiative }: InitiativeCardProps) {
       </CardHeader>
       <CardContent className="pb-4 space-y-4">
         <div className="flex flex-wrap gap-2">
-           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-             <FileText className="w-3.5 h-3.5" />
-             <span>{initiative.type}</span>
-           </div>
-           <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium", priority.bg, priority.color)}>
-             <AlertTriangle className="w-3.5 h-3.5" />
-             <span>{initiative.priority}</span>
-           </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+            <FileText className="w-3.5 h-3.5" />
+            <span>{initiative.type}</span>
+          </div>
+          <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium", priority.bg, priority.color)}>
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>{initiative.priority}</span>
+          </div>
         </div>
-        
+
         <p className="text-sm text-slate-600 line-clamp-3">
           {initiative.description}
         </p>
       </CardContent>
       <CardFooter className="pt-0 text-xs text-slate-500 flex flex-col items-start gap-2">
-         <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-slate-400" />
-            <span>{initiative.sector}</span>
-         </div>
-         <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-slate-400" />
-            <span>{initiative.owner}</span>
-         </div>
-         <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>{initiative.date}</span>
-         </div>
+        <div className="flex items-center gap-2">
+          <Building2 className="w-4 h-4 text-slate-400" />
+          <span>{initiative.sector}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-slate-400" />
+          <span>{initiative.owner}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-slate-400" />
+          <span>{initiative.date}</span>
+        </div>
       </CardFooter>
     </Card>
   );
