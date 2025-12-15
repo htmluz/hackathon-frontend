@@ -37,8 +37,23 @@ export default function Login() {
       const response = await authApi.login({ email, password })
 
       if (response.success && response.user) {
-        // Store user info for UI purposes
-        localStorage.setItem('user', JSON.stringify(response.user))
+        // Fetch personal information after successful login
+        try {
+          const personalInfo = await authApi.getPersonalInfo()
+          
+          if (personalInfo.success && personalInfo.data) {
+            // Store complete user info and user types
+            localStorage.setItem('user', JSON.stringify(personalInfo.data.user))
+            localStorage.setItem('user_types', JSON.stringify(personalInfo.data.user_types))
+          } else {
+            // Fallback to login response user if personal info fails
+            localStorage.setItem('user', JSON.stringify(response.user))
+          }
+        } catch {
+          // Fallback to login response user if personal info request fails
+          localStorage.setItem('user', JSON.stringify(response.user))
+        }
+        
         // Navigate to the original destination or home
         navigate(from, { replace: true })
       } else {

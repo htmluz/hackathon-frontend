@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
     LayoutGrid,
@@ -9,8 +9,10 @@ import {
     ListOrdered,
     HelpCircle,
     Bell,
-    ChevronDown
+    ChevronDown,
+    LogOut
 } from 'lucide-react'
+import { authApi } from '@/api/auth'
 
 interface User {
     id: number
@@ -23,6 +25,8 @@ interface User {
 export function Navbar() {
     const navigate = useNavigate()
     const [user, setUser] = useState<User | null>(null)
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+    const dropdownRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user')
@@ -34,6 +38,24 @@ export function Navbar() {
             }
         }
     }, [])
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    const handleLogout = () => {
+        authApi.logout()
+        setIsDropdownOpen(false)
+        navigate('/login', { replace: true })
+    }
 
     // Helper to get initials
     const getInitials = (name: string) => {
@@ -84,15 +106,40 @@ export function Navbar() {
                     <div className="h-6 w-px bg-gray-600 hidden sm:block"></div>
 
                     {user ? (
-                        <div className="flex items-center gap-3 border border-gray-600 rounded-full pl-1.5 pr-4 py-1.5 cursor-pointer hover:bg-gray-700/50 transition-colors group">
-                            <div className="bg-[var(--primary)] text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-transparent group-hover:ring-[var(--primary)]/50 transition-all">
-                                {getInitials(user.name)}
+                        <div className="relative" ref={dropdownRef}>
+                            <div 
+                                className="flex items-center gap-3 border border-gray-600 rounded-full pl-1.5 pr-4 py-1.5 cursor-pointer hover:bg-gray-700/50 transition-colors group"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            >
+                                <div className="bg-[var(--primary)] text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-transparent group-hover:ring-[var(--primary)]/50 transition-all">
+                                    {getInitials(user.name)}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold leading-tight text-white">{user.name}</span>
+                                    <span className="text-[10px] text-gray-400 leading-tight truncate max-w-[80px]">Gestor</span>
+                                </div>
+                                <ChevronDown 
+                                    size={14} 
+                                    className={`text-gray-400 group-hover:text-white transition-all duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+                                />
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold leading-tight text-white">{user.name}</span>
-                                <span className="text-[10px] text-gray-400 leading-tight truncate max-w-[80px]">Gestor</span>
-                            </div>
-                            <ChevronDown size={14} className="text-gray-400 group-hover:text-white transition-colors" />
+                            
+                            {/* Dropdown Menu */}
+                            {isDropdownOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-[#2a3038] border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-gray-600">
+                                        <p className="text-sm font-medium text-white">{user.name}</p>
+                                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                                    >
+                                        <LogOut size={16} />
+                                        Sair
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="text-xs text-gray-500 animate-pulse">Carregando...</div>

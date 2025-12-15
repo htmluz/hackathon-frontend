@@ -2,8 +2,10 @@ import axios from 'axios'
 import type { AxiosInstance } from 'axios'
 
 // Create axios instance with base configuration
+// In development, we use Vite's proxy to avoid CORS/cookie issues
+// The proxy forwards /api requests to the backend server
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://ec2-18-217-202-4.us-east-2.compute.amazonaws.com:8080/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,8 +21,9 @@ apiClient.interceptors.response.use(
   (error) => {
     // Handle 401 Unauthorized - session expired or not authenticated
     if (error.response?.status === 401) {
-      // Clear user data and redirect to login
+      // Clear all user data
       localStorage.removeItem('user')
+      localStorage.removeItem('user_types')
       // Optionally redirect to login
       // window.location.href = '/login'
     }
