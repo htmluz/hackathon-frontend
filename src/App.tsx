@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import About from './pages/About'
 import Login from './pages/Login'
 import Users from './pages/Users'
+import InitiativesPage from './pages/InitiativesPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Navbar } from './components/Navbar'
 
@@ -33,6 +34,11 @@ function App() {
           <Route path="/users" element={
             <ProtectedRoute>
               <Users />
+            </ProtectedRoute>
+          } />
+          <Route path="/iniciativas" element={
+            <ProtectedRoute>
+              <InitiativesPage />
             </ProtectedRoute>
           } />
         </Routes>
