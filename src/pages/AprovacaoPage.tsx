@@ -5,6 +5,7 @@ import { initiativesService, type CancellationRequest, type Initiative } from "@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
 import { ReviewCancellationModal } from "@/components/ReviewCancellationModal";
+import { ReviewInitiativeModal } from "@/components/ReviewInitiativeModal";
 import { Button } from "@/components/ui/button";
 
 export default function AprovacaoPage() {
@@ -17,20 +18,27 @@ export default function AprovacaoPage() {
     const [selectedCancellation, setSelectedCancellation] = useState<CancellationRequest | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-    // Review Modal State
+    // Review Cancellation Modal State
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [reviewAction, setReviewAction] = useState<{ requestId: number; approved: boolean } | null>(null);
+
+    // Review Initiative Modal State
+    const [isReviewInitiativeOpen, setIsReviewInitiativeOpen] = useState(false);
+    const [reviewInitiativeAction, setReviewInitiativeAction] = useState<{ initiativeId: number; approved: boolean } | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             // Parallel fetch of initiatives and cancellations
             const [initiativesData, cancellationsData] = await Promise.all([
-                initiativesService.getAll({ status: "Submetida" }),
+                initiativesService.getSubmitted(),
                 initiativesService.getCancellationRequests()
             ]);
 
-            setInitiatives(Array.isArray(initiativesData) ? initiativesData : []);
+            const filteredInitiatives = (Array.isArray(initiativesData) ? initiativesData : []).filter(
+                (init: Initiative) => !init.cancellation_request || init.cancellation_request.status !== 'Pendente'
+            );
+            setInitiatives(filteredInitiatives);
             setCancellations(Array.isArray(cancellationsData.data) ? cancellationsData.data : []);
         } catch (error) {
             console.error("Failed to fetch approvals page data", error);
@@ -66,6 +74,11 @@ export default function AprovacaoPage() {
         setIsReviewOpen(true);
     };
 
+    const handleOpenReviewInitiative = (initiativeId: number, approved: boolean) => {
+        setReviewInitiativeAction({ initiativeId, approved });
+        setIsReviewInitiativeOpen(true);
+    };
+
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 flex justify-center">
             <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -87,7 +100,7 @@ export default function AprovacaoPage() {
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 text-blue-800 text-sm mb-6">
                             <Clock className="w-5 h-5 flex-shrink-0 text-blue-600" />
                             <p className="leading-relaxed">
-                                As iniciativas listadas abaixo estão com status <strong>"Em Análise"</strong> e aguardam sua avaliação.
+                                As iniciativas listadas abaixo estão com status <strong>"Submetida"</strong> e aguardam sua avaliação.
                             </p>
                         </div>
 
@@ -120,6 +133,7 @@ export default function AprovacaoPage() {
                                                     setIsDetailsOpen(true);
                                                 }}
                                                 onReviewCancellation={handleOpenReview}
+                                                onReviewInitiative={handleOpenReviewInitiative}
                                             />
                                         ))}
                                     </div>
@@ -245,7 +259,18 @@ export default function AprovacaoPage() {
                 approved={reviewAction?.approved ?? false}
                 onSuccess={() => {
                     fetchData();
-                    setIsDetailsOpen(false); // Close details if open, to refresh context
+                    setIsDetailsOpen(false);
+                }}
+            />
+
+            <ReviewInitiativeModal
+                open={isReviewInitiativeOpen}
+                onOpenChange={setIsReviewInitiativeOpen}
+                initiativeId={reviewInitiativeAction?.initiativeId ?? null}
+                approved={reviewInitiativeAction?.approved ?? false}
+                onSuccess={() => {
+                    fetchData();
+                    setIsDetailsOpen(false);
                 }}
             />
         </div>

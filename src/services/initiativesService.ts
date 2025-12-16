@@ -122,7 +122,15 @@ export const initiativesService = {
     getById: async (id: number | string) => {
         const response = await api.get(`/private/initiatives/${id}`);
         return response.data;
-    }
+    },
+
+    getSubmitted: async () => {
+        const response = await api.get('/private/initiatives/submitted');
+        return response.data.data;
+    },
+
+    reviewInitiative: async (id: number, approved: boolean, reason: string) => {
+        const response = await api.post(`/private/initiatives/${id}/review`, { approved, reason });
+        return response.data;
+    },
 };
-
-

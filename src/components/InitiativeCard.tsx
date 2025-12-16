@@ -12,6 +12,7 @@ export interface InitiativeCardProps {
   compact?: boolean;
   onClick?: () => void;
   onReviewCancellation?: (requestId: number, approved: boolean) => void;
+  onReviewInitiative?: (id: number, approved: boolean) => void;
 }
 
 const statusConfig: Record<string, { color: string; icon: React.ElementType; bg: string }> = {
@@ -29,7 +30,7 @@ const priorityConfig: Record<string, { color: string; bg: string; icon: React.El
   "Baixa": { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle },
 };
 
-export function InitiativeCard({ data, compact = false, onClick, onReviewCancellation }: InitiativeCardProps) {
+export function InitiativeCard({ data, compact = false, onClick, onReviewCancellation, onReviewInitiative }: InitiativeCardProps) {
   const initiative = data;
   const status = statusConfig[initiative.status] || statusConfig["Em Análise"];
   const priority = priorityConfig[initiative.priority] || priorityConfig["Média"];
@@ -103,6 +104,7 @@ export function InitiativeCard({ data, compact = false, onClick, onReviewCancell
               "{initiative.cancellation_request.reason}"
             </p>
 
+
             {canReview && onReviewCancellation && (
               <div className="flex gap-2 justify-end pt-1 border-t border-red-100/50">
                 <Button
@@ -128,6 +130,32 @@ export function InitiativeCard({ data, compact = false, onClick, onReviewCancell
                 </Button>
               </div>
             )}
+          </div>
+        )}
+
+        {canReview && onReviewInitiative && !hasPendingCancellation && (
+          <div className="flex gap-2 justify-end pt-3 mt-auto border-t border-slate-100">
+            <Button
+              size="sm"
+              className="h-8 bg-green-600 hover:bg-green-700 text-white text-xs px-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReviewInitiative(initiative.id, true);
+              }}
+            >
+              <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Aprovar
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8 text-xs px-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReviewInitiative(initiative.id, false);
+              }}
+            >
+              <XCircle className="w-3.5 h-3.5 mr-1.5" /> Reprovar
+            </Button>
           </div>
         )}
       </CardContent>
