@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Calendar, User, Building2, AlertTriangle, Play, Clock, CheckCircle, FileText, XCircle, ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,27 @@ export function InitiativeCard({ data, compact = false, onClick, onReviewCancell
   const StatusIcon = status.icon;
 
   const hasPendingCancellation = initiative.cancellation_request && initiative.cancellation_request.status === 'Pendente';
+
+  const [canReview, setCanReview] = useState(false);
+
+  useEffect(() => {
+    const storedUserTypes = localStorage.getItem('user_types');
+    if (storedUserTypes) {
+      try {
+        const types = JSON.parse(storedUserTypes);
+        const hasPermission = Array.isArray(types) && types.some((t: any) => {
+          const name = (t.name || "").toLowerCase();
+          return name.includes('admin') || name.includes('gestor') || name.includes('manager');
+        });
+        setCanReview(hasPermission);
+      } catch (error) {
+        console.error("Failed to parse user types", error);
+        setCanReview(false);
+      }
+    } else {
+      setCanReview(false);
+    }
+  }, []);
 
   return (
     <Card
@@ -81,7 +103,7 @@ export function InitiativeCard({ data, compact = false, onClick, onReviewCancell
               "{initiative.cancellation_request.reason}"
             </p>
 
-            {onReviewCancellation && (
+            {canReview && onReviewCancellation && (
               <div className="flex gap-2 justify-end pt-1 border-t border-red-100/50">
                 <Button
                   size="sm"

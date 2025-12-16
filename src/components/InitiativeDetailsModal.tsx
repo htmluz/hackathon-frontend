@@ -140,6 +140,29 @@ export function InitiativeDetailsModal({
         }
     };
 
+    // Role check logic
+    const [canReview, setCanReview] = useState(false);
+    useEffect(() => {
+        if (open) {
+            const storedUserTypes = localStorage.getItem('user_types');
+            if (storedUserTypes) {
+                try {
+                    const types = JSON.parse(storedUserTypes);
+                    const hasPermission = Array.isArray(types) && types.some((t: any) => {
+                        const name = (t.name || "").toLowerCase();
+                        return name.includes('admin') || name.includes('gestor') || name.includes('manager');
+                    });
+                    setCanReview(hasPermission);
+                } catch (error) {
+                    console.error("Failed to parse user types", error);
+                    setCanReview(false);
+                }
+            } else {
+                setCanReview(false);
+            }
+        }
+    }, [open]);
+
     if (!initiative) return null;
 
     // Use cancellationRequest prop if provided (from direct cancellation list), otherwise check embedded
@@ -371,7 +394,7 @@ export function InitiativeDetailsModal({
                             <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
                                 <h3 className="font-semibold text-base">Ações</h3>
 
-                                {effectiveCancellationRequest && onReviewCancellation ? (
+                                {effectiveCancellationRequest ? (
                                     <div className="space-y-4">
                                         <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm space-y-2">
                                             <div className="flex items-center gap-2 text-red-800 font-semibold">
@@ -386,22 +409,24 @@ export function InitiativeDetailsModal({
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                className="bg-green-600 hover:bg-green-700 text-white w-full"
-                                                onClick={() => onReviewCancellation(effectiveCancellationRequest.id, true)}
-                                            >
-                                                <CheckCircle className="w-4 h-4 mr-2" />
-                                                Aprovar
-                                            </Button>
-                                            <Button
-                                                className="bg-red-600 hover:bg-red-700 text-white w-full"
-                                                onClick={() => onReviewCancellation(effectiveCancellationRequest.id, false)}
-                                            >
-                                                <XCircle className="w-4 h-4 mr-2" />
-                                                Reprovar
-                                            </Button>
-                                        </div>
+                                        {canReview && onReviewCancellation && (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <Button
+                                                    className="bg-green-600 hover:bg-green-700 text-white w-full"
+                                                    onClick={() => onReviewCancellation(effectiveCancellationRequest.id, true)}
+                                                >
+                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                    Aprovar
+                                                </Button>
+                                                <Button
+                                                    className="bg-red-600 hover:bg-red-700 text-white w-full"
+                                                    onClick={() => onReviewCancellation(effectiveCancellationRequest.id, false)}
+                                                >
+                                                    <XCircle className="w-4 h-4 mr-2" />
+                                                    Reprovar
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : isEditable ? (
                                     <>
