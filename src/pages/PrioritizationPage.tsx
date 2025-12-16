@@ -92,7 +92,10 @@ export default function PrioritizationPage() {
                     <span className="text-sm text-slate-500 font-medium">Filtros</span>
                 </div>
 
-                <InitiativesFilter filters={filters} onFilterChange={setFilters} />
+                <InitiativesFilter
+                    filters={filters}
+                    onFilterChange={setFilters}
+                />
 
                 <div className="text-sm text-slate-500 pt-2">
                     {items.length} iniciativas ativas

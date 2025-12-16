@@ -10,12 +10,16 @@ export interface FilterState {
     priority: string;
 }
 
+export type ViewMode = "grid" | "list";
+
 interface InitiativesFilterProps {
     filters: FilterState;
     onFilterChange: (filters: FilterState) => void;
+    viewMode?: ViewMode;
+    onViewChange?: (mode: ViewMode) => void;
 }
 
-export function InitiativesFilter({ filters, onFilterChange }: InitiativesFilterProps) {
+export function InitiativesFilter({ filters, onFilterChange, viewMode, onViewChange }: InitiativesFilterProps) {
     const handleChange = (field: keyof FilterState, value: string) => {
         onFilterChange({ ...filters, [field]: value });
     };
@@ -104,14 +108,26 @@ export function InitiativesFilter({ filters, onFilterChange }: InitiativesFilter
             <div className="flex justify-between items-center pt-2 text-sm text-slate-500">
                 <span>{/* Count moved to parent */}</span>
 
-                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                    <Button variant="ghost" size="icon-sm" className="h-7 w-7 bg-white shadow-sm text-slate-700">
-                        <Grid className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon-sm" className="h-7 w-7 text-slate-400 hover:text-slate-600">
-                        <ListIcon className="w-4 h-4" />
-                    </Button>
-                </div>
+                {(viewMode && onViewChange) && (
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className={`h-7 w-7 shadow-sm ${viewMode === 'grid' ? 'bg-white text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                            onClick={() => onViewChange("grid")}
+                        >
+                            <Grid className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className={`h-7 w-7 shadow-sm ${viewMode === 'list' ? 'bg-white text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                            onClick={() => onViewChange("list")}
+                        >
+                            <ListIcon className="w-4 h-4" />
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );
