@@ -1,21 +1,12 @@
 import { useEffect, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
-import { InitiativeCard, type Initiative } from "@/components/InitiativeCard";
-import { InitiativesFilter, type FilterState, type ViewMode } from "@/components/InitiativesFilter";
-import { NewInitiativeModal } from "@/components/NewInitiativeModal";
-import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
-import { initiativesService } from "@/services/initiativesService";
-=======
 import { InitiativeCard } from "@/components/InitiativeCard";
-import { InitiativesFilter, type FilterState } from "@/components/InitiativesFilter";
+import { InitiativesFilter, type FilterState, type ViewMode } from "@/components/InitiativesFilter";
 import { NewInitiativeModal } from "@/components/NewInitiativeModal";
 import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
 import { ReviewCancellationModal } from "@/components/ReviewCancellationModal";
 import { initiativesService, type Initiative } from "@/services/initiativesService";
-// import { toast } from "sonner"; // If we want to show errors
->>>>>>> 299a802e82ab9cfe219b96f2a66ca4d104aa6fe4
 
 export default function InitiativesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
