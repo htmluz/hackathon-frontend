@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://ec2-18-217-202-4.us-east-2.compute.amazonaws.com:8080',
+        target: 'http://ec2-3-144-46-118.us-east-2.compute.amazonaws.com:8080',
         changeOrigin: true,
         secure: false,
       },
