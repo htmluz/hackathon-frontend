@@ -14,6 +14,26 @@ export interface Initiative {
     created_at?: string;
 }
 
+export interface InitiativeHistory {
+    id: number;
+    initiative_id: number;
+    action: string;
+    old_status?: string;
+    new_status?: string;
+    created_at: string;
+    user_name?: string; // Optional, depends on backend
+}
+
+export interface Comment {
+    id: number;
+    initiative_id: number;
+    user_id: number;
+    user_name: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface CreateInitiativeDTO {
     title: string;
     description: string;
@@ -40,6 +60,26 @@ export const initiativesService = {
 
     create: async (data: CreateInitiativeDTO) => {
         const response = await api.post('/private/initiatives', data);
+        return response.data;
+    },
+
+    update: async (id: string | number, data: Partial<CreateInitiativeDTO>) => {
+        const response = await api.put(`/private/initiatives/${id}`, data);
+        return response.data;
+    },
+
+    getHistory: async (id: string | number) => {
+        const response = await api.get(`/private/initiatives/${id}/history`);
+        return response.data;
+    },
+
+    getComments: async (id: string | number) => {
+        const response = await api.get(`/private/initiatives/${id}/comments`);
+        return response.data;
+    },
+
+    createComment: async (id: string | number, content: string) => {
+        const response = await api.post(`/private/initiatives/${id}/comments`, { content });
         return response.data;
     },
 

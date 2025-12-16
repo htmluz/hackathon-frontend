@@ -19,6 +19,7 @@ export interface Initiative {
 export interface InitiativeCardProps {
   data: Initiative;
   compact?: boolean;
+  onClick?: () => void;
 }
 
 const statusConfig: Record<InitiativeStatus, { color: string; icon: React.ElementType; bg: string }> = {
@@ -36,14 +37,20 @@ const priorityConfig = {
   "Baixa": { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle },
 };
 
-export function InitiativeCard({ data, compact = false }: InitiativeCardProps) {
+export function InitiativeCard({ data, compact = false, onClick }: InitiativeCardProps) {
   const initiative = data;
   const status = statusConfig[initiative.status] || statusConfig["Em Análise"];
   const priority = priorityConfig[initiative.priority] || priorityConfig["Média"];
   const StatusIcon = status.icon;
 
   return (
-    <Card className={cn("cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1", compact && "shadow-none border-slate-200 hover:shadow-md")}>
+    <Card
+      onClick={onClick}
+      className={cn(
+        "cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+        compact && "shadow-none border-slate-200 hover:shadow-md"
+      )}
+    >
       <CardHeader className={cn("pb-3", compact && "p-4 pb-2")}>
         <div className="flex justify-between items-start gap-4">
           <CardTitle className={cn("font-bold text-slate-800 leading-tight", compact ? "text-base" : "text-lg")}>

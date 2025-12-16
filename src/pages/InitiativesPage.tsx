@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { InitiativeCard, type Initiative } from "@/components/InitiativeCard";
 import { InitiativesFilter, type FilterState } from "@/components/InitiativesFilter";
 import { NewInitiativeModal } from "@/components/NewInitiativeModal";
+import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
 import { initiativesService } from "@/services/initiativesService";
 // import { toast } from "sonner"; // If we want to show errors
 
 export default function InitiativesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [initiatives, setInitiatives] = useState<Initiative[]>([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<FilterState>({
@@ -88,7 +91,14 @@ export default function InitiativesPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {initiatives.map((initiative) => (
-                                <InitiativeCard key={initiative.id} data={initiative} />
+                                <InitiativeCard
+                                    key={initiative.id}
+                                    data={initiative}
+                                    onClick={() => {
+                                        setSelectedInitiative(initiative);
+                                        setIsDetailsOpen(true);
+                                    }}
+                                />
                             ))}
                         </div>
                     )}
@@ -98,6 +108,13 @@ export default function InitiativesPage() {
             <NewInitiativeModal
                 open={isModalOpen}
                 onOpenChange={setIsModalOpen}
+                onSuccess={handleSuccess}
+            />
+
+            <InitiativeDetailsModal
+                open={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+                initiative={selectedInitiative as any} // Type assertion to bypass slight mismatch
                 onSuccess={handleSuccess}
             />
         </div>
