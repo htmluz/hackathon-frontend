@@ -101,25 +101,67 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
 
     const [error, setError] = useState<string | null>(null);
     const [aiLoading, setAiLoading] = useState(false);
+    const [showAIComparison, setShowAIComparison] = useState(false);
+    const [originalText, setOriginalText] = useState("");
+    const [improvedText, setImprovedText] = useState("");
 
-    const DEFAULT_AI_PROMPT = `Você é um assistente especializado em análise de requisitos e desenvolvimento de produtos. Seu papel é receber a descrição inicial de uma ideia ou necessidade escrita por um usuário não técnico e melhorar esse texto.
+    const DEFAULT_AI_PROMPT = `Você é um assistente de apoio ao Key User da Senior Sistemas. Seu papel é ajudar a estruturar iniciativas corporativas de TI de forma clara e completa, facilitando a análise pela equipe de TIC.
 
-Reescreva a descrição de forma clara e objetiva, detalhando:
+ATENÇÃO:
+Caso o usuário envie um texto que não tem informação o suficiente não tente completar. Responda informando o usuário quais os pontos que faltam.
 
-- O problema ou necessidade que o usuário está tentando resolver.
-- O objetivo da solicitação (o que ele quer alcançar).
-- O público ou usuário final afetado.
-- O benefício ou impacto esperado.
-- Exemplo(s) de uso, se fizer sentido.
+CONTEXTO:
+Você receberá uma descrição inicial escrita por um usuário não técnico. Essa descrição pode mencionar sistemas internos da Senior que você não conhece - mantenha os nomes como estão, sem tentar explicá-los.
 
-Use linguagem simples, fluida e sem jargões técnicos.
-Mantenha o texto em formato corrido, pronto para ser lido por um analista de produto.
+OBJETIVO:
+Transformar a descrição em um texto estruturado, claro e objetivo, pronto para análise técnica.
 
-Importante:
+PROCESSAMENTO:
+Analise a descrição e identifique:
+- O problema ou necessidade atual
+- O objetivo da iniciativa
+- Quem será impactado (setores, usuários, sistemas)
+- Benefícios esperados
+- Escopo (o que está incluído e o que não está)
+- Riscos, dependências ou urgências mencionadas
+- Dados quantitativos (volumes, tempos, custos)
 
-- Não use nenhuma formatação Markdown.
-- Não insira títulos, subtítulos, listas ou bullets.
-- A resposta deve ser um texto contínuo, coeso e humanamente compreensível.
+FORMATO DE SAÍDA:
+Gere um texto estruturado com as seguintes seções (use ícones e quebras de linha, mas mantenha formato de texto corrido dentro de cada seção):
+
+🎯 OBJETIVO
+[Texto claro e direto sobre o que se quer alcançar]
+
+📋 PROBLEMA ATUAL
+[Descrição do cenário atual e suas limitações]
+
+👥 IMPACTO
+[Quem será afetado: setores, sistemas, usuários. Quantifique quando possível]
+
+💡 BENEFÍCIOS ESPERADOS
+[Lista objetiva dos ganhos esperados: tempo, qualidade, redução de erros, etc.]
+
+🧩 ESCOPO
+O que está incluído: [lista]
+O que está fora do escopo: [lista, se aplicável]
+
+⚠️ PONTOS DE ATENÇÃO
+[Riscos, dependências, urgências ou pré-requisitos identificados. Omita se não houver]
+
+📊 DADOS RELEVANTES
+[Volumes, tempos, custos ou métricas mencionadas. Omita se não houver]
+
+REGRAS IMPORTANTES:
+- Use linguagem simples e corporativa, sem jargões técnicos desnecessários
+- Mantenha nomes de sistemas internos exatamente como mencionados
+- Se alguma informação não foi fornecida, não invente - apenas omita a seção
+- Preserve dados quantitativos mencionados (volumes, tempos, custos)
+- Não faça estimativas técnicas ou defina prioridades
+- Não use formatação Markdown dentro das seções (sem **, ##, -, etc)
+- Use quebras de linha para separar seções, mas mantenha texto corrido dentro delas
+
+MENSAGEM FINAL:
+Finalize com: "Revise as informações acima e ajuste o que for necessário antes de enviar para análise da TIC."
 
 Texto do usuário:`;
 
@@ -133,7 +175,9 @@ Texto do usuário:`;
         setError(null);
         try {
             const response = await aiService.processText(formData.description, DEFAULT_AI_PROMPT);
-            handleChange("description", response.data.generated_text);
+            setOriginalText(formData.description);
+            setImprovedText(response.data.generated_text);
+            setShowAIComparison(true);
         } catch (err: any) {
             console.error("Error improving description with AI", err);
             const errorMessage = err.response?.data?.error || "Ocorreu um erro ao processar o texto com IA.";
@@ -141,6 +185,15 @@ Texto do usuário:`;
         } finally {
             setAiLoading(false);
         }
+    };
+
+    const handleAcceptAI = () => {
+        handleChange("description", improvedText);
+        setShowAIComparison(false);
+    };
+
+    const handleRejectAI = () => {
+        setShowAIComparison(false);
     };
 
     const handleSubmit = async () => {
@@ -168,8 +221,84 @@ Texto do usuário:`;
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[1600px] h-[90vh] bg-slate-50/50 flex flex-col gap-0 p-0">
+        <>
+            {/* AI Comparison Modal */}
+            <Dialog open={showAIComparison} onOpenChange={setShowAIComparison}>
+                <DialogContent className="max-w-[1400px] h-[85vh] bg-white flex flex-col gap-0 p-0">
+                    <DialogHeader className="px-8 py-5 bg-gradient-to-r from-primary/5 to-primary/10 border-b flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <Sparkles className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-xl">Sugestão de Melhoria com IA</DialogTitle>
+                                <DialogDescription className="mt-1">
+                                    Compare sua descrição original com a versão estruturada pela IA
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-auto p-8">
+                        <div className="grid grid-cols-2 gap-6 h-full">
+                            {/* Original Text */}
+                            <div className="flex flex-col">
+                                <div className="mb-4 flex items-center gap-2">
+                                    <div className="w-1 h-6 bg-slate-400 rounded-full"></div>
+                                    <h3 className="font-semibold text-slate-700">Texto Original</h3>
+                                </div>
+                                <div className="flex-1 bg-slate-50 rounded-xl p-6 border border-slate-200 overflow-auto">
+                                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                        {originalText}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Improved Text */}
+                            <div className="flex flex-col">
+                                <div className="mb-4 flex items-center gap-2">
+                                    <div className="w-1 h-6 bg-primary rounded-full"></div>
+                                    <h3 className="font-semibold text-slate-700">Versão Melhorada</h3>
+                                    <span className="ml-auto text-xs bg-primary/10 text-black px-2 py-1 rounded-full font-medium">
+                                        ✨ Sugestão da IA
+                                    </span>
+                                </div>
+                                <div className="flex-1 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20 overflow-auto">
+                                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                        {improvedText}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="px-8 py-5 bg-slate-50 border-t flex items-center justify-between flex-shrink-0">
+                        <p className="text-sm text-slate-600">
+                            💡 Você pode editar o texto depois de aceitar a sugestão
+                        </p>
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={handleRejectAI}
+                                className="h-10"
+                            >
+                                Manter Original
+                            </Button>
+                            <Button
+                                onClick={handleAcceptAI}
+                                className="h-10 bg-primary text-white"
+                            >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Usar Sugestão
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Main Modal */}
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="max-w-[1600px] h-[90vh] bg-slate-50/50 flex flex-col gap-0 p-0">
                 <DialogHeader className="px-8 py-5 bg-white border-b flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <Button
@@ -236,7 +365,7 @@ Texto do usuário:`;
                                                 variant="ghost"
                                                 onClick={handleAIImprove}
                                                 disabled={aiLoading || !formData.description.trim()}
-                                                className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                                className="h-8 text-primary hover:text-primary hover:bg-slate-100"
                                             >
                                                 {aiLoading ? (
                                                     <>
@@ -253,11 +382,18 @@ Texto do usuário:`;
                                         </div>
                                         <Textarea
                                             id="description"
-                                            placeholder="Descreva em detalhes a iniciativa, seus objetivos e escopo..."
-                                            className="min-h-[120px]"
+                                            placeholder="Ex: Hoje o processo de liberação de acesso ao portal é manual. Cada solicitação demora 4 minutos e envolve validação de CNPJ, alteração no CRM e retorno por e-mail. Recebemos cerca de 596 solicitações por mês, totalizando 40 horas de trabalho manual..."
+                                            className="min-h-[160px]"
                                             value={formData.description}
                                             onChange={(e) => handleChange("description", e.target.value)}
                                         />
+                                        <div className="flex items-start gap-2 text-xs text-slate-500 bg-primary/5 p-3 rounded-lg border border-primary/10">
+                                            <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                                            <p>
+                                                <span className="font-medium text-primary">Dica:</span> Escreva livremente sobre o problema, objetivo e impacto esperado. 
+                                                Depois clique em "Melhorar com IA" para estruturar automaticamente.
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">
@@ -428,5 +564,6 @@ Texto do usuário:`;
                 </div>
             </DialogContent>
         </Dialog>
+        </>
     );
 }
