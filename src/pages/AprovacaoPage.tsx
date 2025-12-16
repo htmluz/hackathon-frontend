@@ -3,10 +3,13 @@ import { CheckSquare, Loader2, Clock } from "lucide-react";
 import { InitiativeCard, type Initiative } from "@/components/InitiativeCard";
 import { initiativesService } from "@/services/initiativesService";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
 
 export default function AprovacaoPage() {
     const [initiatives, setInitiatives] = useState<Initiative[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
     const fetchInitiatives = async () => {
         setLoading(true);
@@ -24,6 +27,10 @@ export default function AprovacaoPage() {
     useEffect(() => {
         fetchInitiatives();
     }, []);
+
+    const handleSuccess = () => {
+        fetchInitiatives();
+    };
 
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 flex items-center justify-center">
@@ -69,7 +76,15 @@ export default function AprovacaoPage() {
                             ) : (
                                 <div className="space-y-4">
                                     {initiatives.map((initiative) => (
-                                        <InitiativeCard key={initiative.id} data={initiative} compact />
+                                        <InitiativeCard
+                                            key={initiative.id}
+                                            data={initiative}
+                                            compact
+                                            onClick={() => {
+                                                setSelectedInitiative(initiative);
+                                                setIsDetailsOpen(true);
+                                            }}
+                                        />
                                     ))}
                                 </div>
                             )}
@@ -77,6 +92,13 @@ export default function AprovacaoPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <InitiativeDetailsModal
+                open={isDetailsOpen}
+                onOpenChange={setIsDetailsOpen}
+                initiative={selectedInitiative as any}
+                onSuccess={handleSuccess}
+            />
         </div>
     );
 }

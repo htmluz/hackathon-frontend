@@ -419,7 +419,7 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
 
 
                         {/* Actions */}
-                        <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+                        <div className="bg-white mt-6 p-6 rounded-xl border shadow-sm space-y-4">
                             <h3 className="font-semibold text-base">Ações</h3>
 
                             {isEditable ? (
