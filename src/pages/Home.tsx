@@ -52,7 +52,7 @@ export default function Home() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'Em Execução': return { bg: "bg-[#7ab035]", border: "border-l-[#7ab035]", btn: "text-[#7ab035]" };
+      case 'Em Execução': return { bg: "bg-purple-50 text-purple-600 border border-purple-100", border: "border-l-purple-600", btn: "text-purple-600" };
       case 'Em Planejamento': return { bg: "bg-slate-100 text-slate-500 border border-slate-200", border: "border-l-slate-300", btn: "text-slate-500" };
       case 'Agendado': return { bg: "bg-blue-100 text-blue-600", border: "border-l-blue-500", btn: "text-blue-600" };
       case 'Em Revisão': return { bg: "bg-purple-100 text-purple-600", border: "border-l-purple-500", btn: "text-purple-600" };
