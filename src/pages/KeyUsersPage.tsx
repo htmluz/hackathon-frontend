@@ -135,7 +135,7 @@ export default function KeyUsersPage() {
                                                         {user.user_types && user.user_types.length > 0 ? (
                                                             user.user_types.map(type => (
                                                                 <Badge key={type.id} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
-                                                                    {type.name}
+                                                                    {type.description.split(' ')[0]}
                                                                 </Badge>
                                                             ))
                                                         ) : (

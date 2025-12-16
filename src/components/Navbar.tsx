@@ -226,7 +226,7 @@ export function Navbar() {
                                 <div className="hidden md:flex flex-col">
                                     <span className="text-xs font-bold leading-tight text-white">{user.name}</span>
                                     <span className="text-[10px] text-gray-400 leading-tight truncate max-w-[100px]">
-                                        {userTypes.length > 0 ? userTypes.map(t => t.name).join(', ') : 'Usuário'}
+                                        {userTypes.length > 0 ? userTypes.map(t => t.description.split(' ')[0]).join(', ') : 'Usuário'}
                                     </span>
                                 </div>
                                 <ChevronDown
