@@ -1,11 +1,9 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Megaphone,
   Calendar,
   ArrowRight,
-  Wrench,
-  FolderKanban,
-  FileText,
   BarChart3,
   HelpCircle,
   ChevronRight,
@@ -19,6 +17,8 @@ import teamImg from '@/assets/home/team.png';
 
 import useEmblaCarousel from "embla-carousel-react";
 import AutoScroll from "embla-carousel-auto-scroll";
+import { initiativesService, type Initiative } from "@/services/initiativesService";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -31,6 +31,35 @@ export default function Home() {
     })
   ]);
 
+  const [notices, setNotices] = useState<Initiative[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        // Fetch initiatives that are "In Execution" to show as notices/impacts
+        // In a real scenario you might have a specific 'is_notice' flag or separate type
+        const data = await initiativesService.getAll({ status: 'Em Execução' });
+        setNotices(data);
+      } catch (error) {
+        console.error("Failed to fetch home notices", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotices();
+  }, []);
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'Em Execução': return { bg: "bg-[#7ab035]", border: "border-l-[#7ab035]", btn: "text-[#7ab035]" };
+      case 'Em Planejamento': return { bg: "bg-slate-100 text-slate-500 border border-slate-200", border: "border-l-slate-300", btn: "text-slate-500" };
+      case 'Agendado': return { bg: "bg-blue-100 text-blue-600", border: "border-l-blue-500", btn: "text-blue-600" };
+      case 'Em Revisão': return { bg: "bg-purple-100 text-purple-600", border: "border-l-purple-500", btn: "text-purple-600" };
+      default: return { bg: "bg-slate-100 text-slate-500", border: "border-l-slate-300", btn: "text-slate-500" };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/50 p-6 space-y-8 pb-20">
       {/* Section: Corporate Impact Notices */}
@@ -41,13 +70,18 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">Avisos de Impacto Corporativo</h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-              2 em andamento
-            </span>
+            {!loading && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                {notices ? notices.length : 0} em andamento
+              </span>
+            )}
           </div>
           <div className="ml-auto flex gap-2">
-            {/* Navigation buttons could go here if needed, simplified for now */}
-            <Button variant="ghost" className="text-sm text-slate-500 hover:text-slate-900">
+            <Button
+              variant="ghost"
+              className="text-sm text-slate-500 hover:text-slate-900"
+              onClick={() => navigate('/iniciativas?status=Em Execução')}
+            >
               Ver todos <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -57,116 +91,64 @@ export default function Home() {
         </p>
 
         {/* Carousel Container */}
-        <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
-          <div className="flex gap-6">
-            {[
-              {
-                title: "Implantação do GitHub e Azure DevOps",
-                status: "Em Execução",
-                bgStatus: "bg-[#7ab035]",
-                border: "border-l-[#7ab035]",
-                desc: "Projeto em execução que impactará todos os times de desenvolvimento da Senior, incluindo matriz e filiais.",
-                date: "ago/2025 - dez/2025",
-                tag: "🚨 Impacta toda a Senior",
-                tagColor: "bg-red-50 text-red-600 border-red-100",
-                btnColor: "text-[#7ab035]"
-              },
-              {
-                title: "Migração de Infraestrutura para Cloud",
-                status: "Em Execução",
-                bgStatus: "bg-[#7ab035]",
-                border: "border-l-[#7ab035]",
-                desc: "Modernização da infraestrutura com migração de servidores críticos para ambiente cloud híbrido.",
-                date: "out/2025 - mar/2026",
-                tag: "⚠️ Múltiplos setores",
-                tagColor: "bg-amber-50 text-amber-600 border-amber-100",
-                btnColor: "text-[#7ab035]"
-              },
-              {
-                title: "Novo Sistema de Autenticação SSO",
-                status: "Em Planejamento",
-                bgStatus: "bg-slate-100 text-slate-500 border border-slate-200",
-                border: "border-l-slate-300",
-                desc: "Implementação de Single Sign-On para todos os sistemas corporativos, simplificando o acesso.",
-                date: "jan/2026 - jun/2026",
-                tag: "🚨 Impacta toda a Senior",
-                tagColor: "bg-red-50 text-red-600 border-red-100",
-                btnColor: "text-slate-500"
-              },
-              {
-                title: "Atualização do ERP Senior X",
-                status: "Agendado",
-                bgStatus: "bg-blue-100 text-blue-600",
-                border: "border-l-blue-500",
-                desc: "Atualização programada para a nova versão estável do ERP, trazendo melhorias de performance.",
-                date: "nov/2025",
-                tag: "⚠️ Indisponibilidade Programada",
-                tagColor: "bg-amber-50 text-amber-600 border-amber-100",
-                btnColor: "text-blue-600"
-              },
-              {
-                title: "Política de Segurança da Informação",
-                status: "Em Revisão",
-                bgStatus: "bg-purple-100 text-purple-600",
-                border: "border-l-purple-500",
-                desc: "Revisão e atualização das normas de segurança para adequação às novas diretrizes da LGPD.",
-                date: "dez/2025",
-                tag: "ℹ️ Informativo",
-                tagColor: "bg-blue-50 text-blue-600 border-blue-100",
-                btnColor: "text-purple-600"
-              },
-              {
-                title: "Expansão da Rede Wi-Fi Corporativa",
-                status: "Concluído",
-                bgStatus: "bg-green-100 text-green-700",
-                border: "border-l-green-600",
-                desc: "Finalizada a instalação de novos pontos de acesso para cobertura total no novo prédio anexo.",
-                date: "out/2025",
-                tag: "✅ Infraestrutura",
-                tagColor: "bg-green-50 text-green-700 border-green-100",
-                btnColor: "text-green-700"
-              },
-              {
-                title: "Treinamento em IA Generativa",
-                status: "Inscrições Abertas",
-                bgStatus: "bg-indigo-100 text-indigo-700",
-                border: "border-l-indigo-600",
-                desc: "Workshop prático para colaboradores sobre uso eficiente de ferramentas de IA no dia a dia.",
-                date: "jan/2026",
-                tag: "🎓 Capacitação",
-                tagColor: "bg-indigo-50 text-indigo-700 border-indigo-100",
-                btnColor: "text-indigo-700"
-              }
-            ].map((item, index) => (
-              <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0">
-                <Card className={`h-full border-l-4 ${item.border} hover:shadow-md transition-all`}>
-                  <CardContent className="p-5 space-y-4 h-full flex flex-col">
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="font-bold text-slate-800 leading-snug line-clamp-2">{item.title}</h3>
-                      <span className={`shrink-0 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${item.bgStatus}`}>
-                        {item.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 flex-1">
-                      {item.desc}
-                    </p>
-                    <div className="flex flex-wrap gap-2 text-[10px] pt-2 mt-auto">
-                      <span className="flex items-center gap-1 text-slate-400">
-                        <Calendar className="w-3 h-3" /> {item.date}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${item.tagColor}`}>
-                        {item.tag}
-                      </span>
-                    </div>
-                    <button className={`text-xs font-semibold ${item.btnColor} flex items-center hover:underline mt-2`}>
-                      Saiba mais <ChevronRight className="w-3 h-3 ml-0.5" />
-                    </button>
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
           </div>
-        </div>
+        ) : !notices || notices.length === 0 ? (
+          <div className="p-8 text-center text-slate-500 bg-white rounded-xl border border-dashed">
+            Nenhum aviso ou iniciativa em execução no momento.
+          </div>
+        ) : (
+          <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
+            <div className="flex gap-6">
+              {notices.map((item, index) => {
+                const styles = getStatusStyle(item.status);
+                let dateStr = "";
+                try {
+                  if (item.deadline) {
+                    dateStr = new Date(item.deadline).toLocaleDateString('pt-BR');
+                    if (dateStr === "Invalid Date") dateStr = "";
+                  }
+                } catch (e) { console.error("Invalid date", item.deadline); }
+
+                return (
+                  <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0">
+                    <Card className={`h-full border-l-4 ${styles.border} hover:shadow-md transition-all`}>
+                      <CardContent className="p-5 space-y-4 h-full flex flex-col">
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-bold text-slate-800 leading-snug line-clamp-2">{item.title}</h3>
+                          <span className={`shrink-0 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${styles.bg}`}>
+                            {item.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 flex-1">
+                          {item.description}
+                        </p>
+                        <div className="flex flex-wrap gap-2 text-[10px] pt-2 mt-auto">
+                          {dateStr && (
+                            <span className="flex items-center gap-1 text-slate-400">
+                              <Calendar className="w-3 h-3" /> {dateStr}
+                            </span>
+                          )}
+                          <span className={`px-2 py-0.5 rounded-full border font-medium whitespace-nowrap bg-amber-50 text-amber-600 border-amber-100`}>
+                            {item.sector || 'Geral'}
+                          </span>
+                        </div>
+                        <button
+                          className={`text-xs font-semibold ${styles.btn} flex items-center hover:underline mt-2`}
+                          onClick={() => navigate(`/iniciativas?id=${item.id}`)} // Or open modal
+                        >
+                          Saiba mais <ChevronRight className="w-3 h-3 ml-0.5" />
+                        </button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Section: Visual Navigation (Hero Cards) */}
@@ -200,7 +182,7 @@ export default function Home() {
         <div className="lg:col-span-5 flex flex-col gap-6 h-full">
           {/* Top Card */}
           <div
-            onClick={() => navigate('/iniciativas?new=true')} // Assuming query param logic or just nav
+            onClick={() => navigate('/iniciativas?new=true')}
             className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
           >
             <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/20 to-transparent z-10" />
@@ -240,70 +222,29 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
-        {/* Section: Quick Access */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold text-slate-800">Acesso Rápido</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <QuickAccessCard icon={Wrench} label="Listagem de Melhorias" />
-            <QuickAccessCard icon={FolderKanban} label="Iniciativas de Projetos" />
-            <QuickAccessCard icon={FileText} label="Listagem de Projetos" />
-            <QuickAccessCard icon={BarChart3} label="Status Report" />
-            <QuickAccessCard icon={Users} label="Indicadores" />
-          </div>
-
-          <div className="mt-8 relative overflow-hidden rounded-xl bg-gradient-to-r from-[#7ab035]/10 to-green-50 border border-[#7ab035]/20 p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-800">Precisa registrar uma nova iniciativa?</h3>
-              <p className="text-sm text-slate-600">Cadastre agora e acompanhe o andamento em tempo real junto com a equipe de TI.</p>
-            </div>
-            <Button
-              className="bg-[#7ab035] hover:bg-[#6a992d] text-white font-bold shadow-lg shadow-green-900/10 whitespace-nowrap"
-              onClick={() => navigate('/iniciativas?new=true')}
-            >
-              Nova Iniciativa <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+      <div className="pt-8 max-w-4xl mx-auto">
+        <div className="flex items-center gap-2 text-slate-500 mb-4 justify-center">
+          <HelpCircle className="w-5 h-5" />
+          <h2 className="font-bold text-sm uppercase tracking-wide">FAQ - Perguntas Frequentes</h2>
         </div>
 
-        {/* Section: FAQ */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-slate-500 mb-2">
-            <HelpCircle className="w-4 h-4" />
-            <h2 className="font-bold text-sm uppercase tracking-wide">FAQ - Perguntas Frequentes</h2>
+        <Card className="bg-white shadow-sm border-slate-100">
+          <div className="divide-y divide-slate-100">
+            {[
+              "FAQ - Andamento de Demandas",
+              "FAQ - Cadastro de Iniciativas",
+              "Qual a diferença entre iniciativa, melhoria e projeto?",
+              "Como funciona a esteira de projetos da TI Corporativa?",
+              "Quanto tempo leva para qualificar uma iniciativa?"
+            ].map((item, i) => (
+              <button key={i} className="w-full text-left p-4 text-sm font-medium text-slate-600 hover:text-[#7ab035] hover:bg-slate-50 transition-colors flex justify-between items-center group">
+                {item}
+                <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#7ab035]" />
+              </button>
+            ))}
           </div>
-
-          <Card className="bg-white shadow-sm border-slate-100">
-            <div className="divide-y divide-slate-100">
-              {[
-                "FAQ - Andamento de Demandas",
-                "FAQ - Cadastro de Iniciativas",
-                "Qual a diferença entre iniciativa, melhoria e projeto?",
-                "Como funciona a esteira de projetos da TI Corporativa?",
-                "Quanto tempo leva para qualificar uma iniciativa?"
-              ].map((item, i) => (
-                <button key={i} className="w-full text-left p-4 text-xs font-medium text-slate-600 hover:text-[#7ab035] hover:bg-slate-50 transition-colors flex justify-between items-center group">
-                  {item}
-                  <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-[#7ab035]" />
-                </button>
-              ))}
-            </div>
-          </Card>
-        </div>
+        </Card>
       </div>
     </div>
-  );
-}
-
-function QuickAccessCard({ icon: Icon, label }: { icon: React.ElementType, label: string }) {
-  return (
-    <button className="flex flex-col items-center justify-center gap-3 p-4 bg-white border border-slate-200 rounded-xl hover:border-[#7ab035] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group h-32">
-      <div className="p-3 rounded-full bg-slate-50 text-slate-500 group-hover:bg-[#7ab035] group-hover:text-white transition-colors">
-        <Icon className="w-5 h-5" />
-      </div>
-      <span className="text-xs font-medium text-slate-600 text-center group-hover:text-slate-900">
-        {label}
-      </span>
-    </button>
   );
 }

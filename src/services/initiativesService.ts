@@ -74,7 +74,7 @@ export const initiativesService = {
         }
 
         const response = await api.get(url);
-        return response.data.data; // Unwrapping pagination object
+        return response.data.data || []; // Ensure we always return an array
     },
 
     // getFiltered removed as it is now integrated into getAll
