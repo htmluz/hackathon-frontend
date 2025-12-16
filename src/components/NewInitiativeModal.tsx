@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle, Sparkles, Edit3, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,13 @@ import {
     DialogDescription
 } from "@/components/ui/dialog";
 import api from "@/api/axios";
+
+interface TextBlock {
+    icon: string;
+    title: string;
+    content: string;
+    fullText: string;
+}
 
 interface NewInitiativeModalProps {
     open: boolean;
@@ -104,6 +111,15 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
     const [showAIComparison, setShowAIComparison] = useState(false);
     const [originalText, setOriginalText] = useState("");
     const [improvedText, setImprovedText] = useState("");
+    const [parsedBlocks, setParsedBlocks] = useState<TextBlock[]>([]);
+    
+    // Block editing states
+    const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
+    const [blockEditPrompt, setBlockEditPrompt] = useState("");
+    const [blockEditLoading, setBlockEditLoading] = useState(false);
+    
+    // Block review states
+    const [reviewedBlocks, setReviewedBlocks] = useState<Set<number>>(new Set());
 
     const DEFAULT_AI_PROMPT = `Você é um assistente de apoio ao Key User da Senior Sistemas. Seu papel é ajudar a estruturar iniciativas corporativas de TI de forma clara e completa, facilitando a análise pela equipe de TIC.
 
@@ -165,6 +181,24 @@ Finalize com: "Revise as informações acima e ajuste o que for necessário ante
 
 Texto do usuário:`;
 
+    // Parse text into blocks
+    const parseTextIntoBlocks = (text: string): TextBlock[] => {
+        const blockRegex = /(🎯|📋|👥|💡|🧩|⚠️|📊)\s*([A-ZÇÃÕÁÉÍÓÚ\s]+)\n([\s\S]*?)(?=\n(?:🎯|📋|👥|💡|🧩|⚠️|📊)|$)/gi;
+        const blocks: TextBlock[] = [];
+        let match;
+
+        while ((match = blockRegex.exec(text)) !== null) {
+            blocks.push({
+                icon: match[1],
+                title: match[2].trim(),
+                content: match[3].trim(),
+                fullText: match[0]
+            });
+        }
+
+        return blocks;
+    };
+
     const handleAIImprove = async () => {
         if (!formData.description.trim()) {
             setError("Por favor, preencha a descrição antes de usar a IA.");
@@ -176,7 +210,10 @@ Texto do usuário:`;
         try {
             const response = await aiService.processText(formData.description, DEFAULT_AI_PROMPT);
             setOriginalText(formData.description);
-            setImprovedText(response.data.generated_text);
+            const improved = response.data.generated_text;
+            setImprovedText(improved);
+            setParsedBlocks(parseTextIntoBlocks(improved));
+            setReviewedBlocks(new Set()); // Reset reviewed blocks
             setShowAIComparison(true);
         } catch (err: any) {
             console.error("Error improving description with AI", err);
@@ -190,10 +227,83 @@ Texto do usuário:`;
     const handleAcceptAI = () => {
         handleChange("description", improvedText);
         setShowAIComparison(false);
+        setReviewedBlocks(new Set()); // Reset for next time
     };
 
     const handleRejectAI = () => {
         setShowAIComparison(false);
+        setParsedBlocks([]);
+        setReviewedBlocks(new Set());
+    };
+
+    const toggleBlockReview = (index: number) => {
+        setReviewedBlocks(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(index)) {
+                newSet.delete(index);
+            } else {
+                newSet.add(index);
+            }
+            return newSet;
+        });
+    };
+
+    const allBlocksReviewed = parsedBlocks.length > 0 && reviewedBlocks.size === parsedBlocks.length;
+
+    const handleEditBlock = (index: number) => {
+        setEditingBlockIndex(index);
+        setBlockEditPrompt("");
+    };
+
+    const handleRefineBlock = async () => {
+        if (editingBlockIndex === null || !blockEditPrompt.trim()) return;
+
+        setBlockEditLoading(true);
+        try {
+            const block = parsedBlocks[editingBlockIndex];
+            const refinePrompt = `Você é um assistente de refinamento de texto. O usuário tem o seguinte bloco de texto e quer fazer um ajuste específico.
+
+BLOCO ATUAL:
+${block.icon} ${block.title}
+${block.content}
+
+SOLICITAÇÃO DO USUÁRIO:
+${blockEditPrompt}
+
+INSTRUÇÕES:
+- Mantenha o formato: ${block.icon} ${block.title} no início
+- Ajuste APENAS o conteúdo conforme solicitado
+- Mantenha linguagem corporativa e objetiva
+- Não adicione formatação Markdown
+- Retorne apenas o bloco refinado completo
+
+Bloco refinado:`;
+
+            const response = await aiService.processText(block.fullText, refinePrompt);
+            const refinedText = response.data.generated_text;
+
+            // Update the block
+            const updatedBlocks = [...parsedBlocks];
+            updatedBlocks[editingBlockIndex] = {
+                ...block,
+                content: refinedText.replace(`${block.icon} ${block.title}`, '').trim(),
+                fullText: refinedText
+            };
+            setParsedBlocks(updatedBlocks);
+
+            // Rebuild the full text
+            const newFullText = updatedBlocks.map(b => b.fullText).join('\n\n');
+            setImprovedText(newFullText);
+
+            // Close edit modal
+            setEditingBlockIndex(null);
+            setBlockEditPrompt("");
+        } catch (err: any) {
+            console.error("Error refining block", err);
+            setError("Erro ao refinar o bloco. Tente novamente.");
+        } finally {
+            setBlockEditLoading(false);
+        }
     };
 
     const handleSubmit = async () => {
@@ -222,6 +332,80 @@ Texto do usuário:`;
 
     return (
         <>
+            {/* Block Edit Modal */}
+            <Dialog open={editingBlockIndex !== null} onOpenChange={(open) => !open && setEditingBlockIndex(null)}>
+                <DialogContent className="max-w-[600px] bg-white">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <Edit3 className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-lg">Refinar Bloco</DialogTitle>
+                                <DialogDescription>
+                                    {editingBlockIndex !== null && parsedBlocks[editingBlockIndex] && (
+                                        <span className="flex items-center gap-2 mt-1">
+                                            <span className="text-lg">{parsedBlocks[editingBlockIndex].icon}</span>
+                                            <span>{parsedBlocks[editingBlockIndex].title}</span>
+                                        </span>
+                                    )}
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="block-edit-prompt">Como você quer ajustar este bloco?</Label>
+                            <Textarea
+                                id="block-edit-prompt"
+                                placeholder="Ex: Adicione mais detalhes sobre o impacto financeiro, Torne mais objetivo, Inclua métricas específicas..."
+                                className="min-h-[100px]"
+                                value={blockEditPrompt}
+                                onChange={(e) => setBlockEditPrompt(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="bg-slate-50 rounded-lg p-4 border">
+                            <p className="text-xs text-slate-600 mb-2 font-medium">Conteúdo atual:</p>
+                            {editingBlockIndex !== null && parsedBlocks[editingBlockIndex] && (
+                                <p className="text-sm text-slate-700 leading-relaxed">
+                                    {parsedBlocks[editingBlockIndex].content}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => setEditingBlockIndex(null)}
+                            disabled={blockEditLoading}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleRefineBlock}
+                            disabled={blockEditLoading || !blockEditPrompt.trim()}
+                            className="bg-primary text-white"
+                        >
+                            {blockEditLoading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Refinando...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Refinar Bloco
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* AI Comparison Modal */}
             <Dialog open={showAIComparison} onOpenChange={setShowAIComparison}>
                 <DialogContent className="max-w-[1400px] h-[85vh] bg-white flex flex-col gap-0 p-0">
@@ -254,7 +438,7 @@ Texto do usuário:`;
                                 </div>
                             </div>
 
-                            {/* Improved Text */}
+                            {/* Improved Text with Editable Blocks */}
                             <div className="flex flex-col">
                                 <div className="mb-4 flex items-center gap-2">
                                     <div className="w-1 h-6 bg-primary rounded-full"></div>
@@ -263,19 +447,89 @@ Texto do usuário:`;
                                         ✨ Sugestão da IA
                                     </span>
                                 </div>
-                                <div className="flex-1 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20 overflow-auto">
-                                    <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                                        {improvedText}
-                                    </p>
+                                <div className="flex-1 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/20 overflow-auto space-y-4">
+                                    {parsedBlocks.length > 0 ? (
+                                        parsedBlocks.map((block, index) => (
+                                            <div 
+                                                key={index} 
+                                                className={`group relative bg-white/50 rounded-lg p-4 border transition-all ${
+                                                    reviewedBlocks.has(index) 
+                                                        ? 'border-green-300 bg-green-50/30' 
+                                                        : 'border-slate-200 hover:border-primary/40'
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <span className="text-2xl flex-shrink-0">{block.icon}</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-semibold text-slate-800 mb-2">{block.title}</h4>
+                                                        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
+                                                            {block.content}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex gap-1 flex-shrink-0">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => handleEditBlock(index)}
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                                                            title="Refinar este bloco"
+                                                        >
+                                                            <Edit3 className="w-4 h-4 text-primary" />
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => toggleBlockReview(index)}
+                                                            className={`h-8 w-8 p-0 ${
+                                                                reviewedBlocks.has(index) 
+                                                                    ? 'text-green-600 hover:text-green-700' 
+                                                                    : 'text-slate-400 hover:text-slate-600'
+                                                            }`}
+                                                            title={reviewedBlocks.has(index) ? "Marcar como não revisado" : "Marcar como revisado"}
+                                                        >
+                                                            {reviewedBlocks.has(index) ? (
+                                                                <CheckCircle2 className="w-5 h-5" />
+                                                            ) : (
+                                                                <Circle className="w-5 h-5" />
+                                                            )}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                            {improvedText}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="px-8 py-5 bg-slate-50 border-t flex items-center justify-between flex-shrink-0">
-                        <p className="text-sm text-slate-600">
-                            💡 Você pode editar o texto depois de aceitar a sugestão
-                        </p>
+                        <div className="flex items-center gap-4">
+                            {parsedBlocks.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle2 className={`w-4 h-4 ${allBlocksReviewed ? 'text-green-600' : 'text-slate-400'}`} />
+                                        <span className={`text-sm font-medium ${allBlocksReviewed ? 'text-green-700' : 'text-slate-600'}`}>
+                                            {reviewedBlocks.size} de {parsedBlocks.length} blocos revisados
+                                        </span>
+                                    </div>
+                                    {!allBlocksReviewed && (
+                                        <span className="text-xs text-slate-500 ml-2">
+                                            • Revise todos os blocos antes de aceitar
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                            {parsedBlocks.length === 0 && (
+                                <p className="text-sm text-slate-600">
+                                    💡 Você pode editar o texto depois de aceitar a sugestão
+                                </p>
+                            )}
+                        </div>
                         <div className="flex gap-3">
                             <Button
                                 variant="outline"
@@ -286,7 +540,9 @@ Texto do usuário:`;
                             </Button>
                             <Button
                                 onClick={handleAcceptAI}
-                                className="h-10 bg-primary text-white"
+                                disabled={parsedBlocks.length > 0 && !allBlocksReviewed}
+                                className="h-10 bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={!allBlocksReviewed && parsedBlocks.length > 0 ? "Revise todos os blocos antes de aceitar" : ""}
                             >
                                 <Sparkles className="w-4 h-4 mr-2" />
                                 Usar Sugestão

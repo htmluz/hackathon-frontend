@@ -380,7 +380,7 @@ function Users() {
                                                 <TableCell>
                                                     <div className="flex flex-wrap gap-1">
                                                         {user.user_types?.map(t => (
-                                                            <Badge key={t.id} variant="secondary" className="text-xs">{t.name}</Badge>
+                                                            <Badge key={t.id} variant="secondary" className="text-xs">{t.description.split(' ')[0]}</Badge>
                                                         ))}
                                                     </div>
                                                 </TableCell>
@@ -493,7 +493,7 @@ function Users() {
                                         className="cursor-pointer"
                                         onClick={() => handleTypeToggle(type.id)}
                                     >
-                                        {type.name}
+                                        {type.description.split(' ')[0]}
                                     </Badge>
                                 ))}
                             </div>
