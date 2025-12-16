@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InitiativeCard, type Initiative } from "@/components/InitiativeCard";
-import { InitiativesFilter, type FilterState } from "@/components/InitiativesFilter";
+import { InitiativesFilter, type FilterState, type ViewMode } from "@/components/InitiativesFilter";
 import { NewInitiativeModal } from "@/components/NewInitiativeModal";
 import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
 import { initiativesService } from "@/services/initiativesService";
-// import { toast } from "sonner"; // If we want to show errors
 
 export default function InitiativesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,6 +13,7 @@ export default function InitiativesPage() {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [initiatives, setInitiatives] = useState<Initiative[]>([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState<ViewMode>("grid");
     const [filters, setFilters] = useState<FilterState>({
         search: "",
         status: "",
@@ -40,7 +40,7 @@ export default function InitiativesPage() {
         }
     };
 
-    // Debounce search could be added here, currently sticking to useEffect dependency
+    // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             fetchInitiatives();
@@ -50,6 +50,7 @@ export default function InitiativesPage() {
 
     const handleSuccess = () => {
         setIsModalOpen(false);
+        setIsDetailsOpen(false);
         fetchInitiatives();
     };
 
@@ -71,7 +72,12 @@ export default function InitiativesPage() {
             </div>
 
             {/* Filter */}
-            <InitiativesFilter filters={filters} onFilterChange={setFilters} />
+            <InitiativesFilter
+                filters={filters}
+                onFilterChange={setFilters}
+                viewMode={viewMode}
+                onViewChange={setViewMode}
+            />
 
             {/* Content */}
             {loading ? (
@@ -89,11 +95,15 @@ export default function InitiativesPage() {
                             Nenhuma iniciativa encontrada.
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className={viewMode === 'grid'
+                            ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                            : "flex flex-col gap-3"
+                        }>
                             {initiatives.map((initiative) => (
                                 <InitiativeCard
                                     key={initiative.id}
                                     data={initiative}
+                                    compact={viewMode === 'list'}
                                     onClick={() => {
                                         setSelectedInitiative(initiative);
                                         setIsDetailsOpen(true);
