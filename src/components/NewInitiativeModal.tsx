@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
     DialogTitle,
     DialogDescription
 } from "@/components/ui/dialog";
+import api from "@/api/axios";
 
 interface NewInitiativeModalProps {
     open: boolean;
@@ -22,6 +23,8 @@ interface NewInitiativeModalProps {
 
 export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiativeModalProps) {
     const [loading, setLoading] = useState(false);
+    const [sectorLoading, setSectorLoading] = useState(false);
+    const [userSector, setUserSector] = useState<{ id: string; name: string } | null>(null);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -29,8 +32,68 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
         type: "",
         priority: "",
         deadline: "",
-        sector: "rh" // Default
+        sector: ""
     });
+
+    // Fetch user's sector when modal opens
+    useEffect(() => {
+        if (open) {
+            const fetchUserSector = async () => {
+                setSectorLoading(true);
+                try {
+                    // Get user data from localStorage
+                    const userStr = localStorage.getItem('user');
+                    if (!userStr) {
+                        setError("Usuário não encontrado. Faça login novamente.");
+                        return;
+                    }
+
+                    const user = JSON.parse(userStr);
+                    const sectorId = user.sector_id;
+
+                    if (!sectorId) {
+                        setError("Setor do usuário não encontrado.");
+                        return;
+                    }
+
+                    // Check if sector is already cached in localStorage
+                    const cachedSectorsStr = localStorage.getItem('sectors');
+                    let cachedSectors: any = {};
+
+                    if (cachedSectorsStr) {
+                        cachedSectors = JSON.parse(cachedSectorsStr);
+                    }
+
+                    // If sector is cached, use it
+                    if (cachedSectors[sectorId]) {
+                        setUserSector(cachedSectors[sectorId]);
+                        setFormData(prev => ({ ...prev, sector: cachedSectors[sectorId].id }));
+                    } else {
+                        // Fetch sector from API
+                        const response = await api.get(`/private/sectors/${sectorId}`);
+                        const sectorData = {
+                            id: response.data.data.id.toString(),
+                            name: response.data.data.name
+                        };
+
+                        setUserSector(sectorData);
+                        setFormData(prev => ({ ...prev, sector: sectorData.id }));
+
+                        // Cache the sector
+                        cachedSectors[sectorId] = sectorData;
+                        localStorage.setItem('sectors', JSON.stringify(cachedSectors));
+                    }
+                } catch (err: any) {
+                    console.error("Error fetching user sector", err);
+                    setError("Não foi possível carregar o setor do usuário.");
+                } finally {
+                    setSectorLoading(false);
+                }
+            };
+
+            fetchUserSector();
+        }
+    }, [open]);
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -296,17 +359,26 @@ Texto do usuário:`;
                             {/* Requester Sector */}
                             <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
                                 <Label htmlFor="sector" className="text-base font-semibold">Setor Solicitante</Label>
-                                <Select value={formData.sector} onValueChange={(value) => handleChange("sector", value)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione o setor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="rh">Recursos Humanos</SelectItem>
-                                        <SelectItem value="comercial">Comercial</SelectItem>
-                                        <SelectItem value="ti">Tecnologia da Informação</SelectItem>
-                                        <SelectItem value="financeiro">Financeiro</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {sectorLoading ? (
+                                    <div className="flex items-center justify-center py-3">
+                                        <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                                    </div>
+                                ) : userSector ? (
+                                    <Input
+                                        value={userSector.name}
+                                        readOnly
+                                        className="bg-slate-50 text-slate-700 cursor-not-allowed"
+                                    />
+                                ) : (
+                                    <Input
+                                        value="Carregando..."
+                                        readOnly
+                                        className="bg-slate-50 text-slate-400 cursor-not-allowed"
+                                    />
+                                )}
+                                <p className="text-xs text-slate-500">
+                                    Você só pode criar iniciativas para o seu setor.
+                                </p>
                             </div>
 
                             {/* Actions */}

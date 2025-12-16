@@ -207,13 +207,6 @@ export function Navbar() {
 
                 {/* Right Section: Actions & Profile */}
                 <div className="flex items-center gap-4 shrink-0">
-                    <button
-                        className="text-gray-400 hover:text-white transition-colors"
-                        title="Ajuda"
-                        onClick={() => navigate('/faq')}
-                    >
-                        <HelpCircle size={20} />
-                    </button>
                     <button className="text-gray-400 hover:text-white transition-colors relative" title="Notificações">
                         <Bell size={20} />
                         <span className="absolute top-0 right-1 block w-2 h-2 rounded-full bg-[var(--primary)] ring-2 ring-[#1e2329]"></span>
@@ -224,13 +217,13 @@ export function Navbar() {
                     {user ? (
                         <div className="relative" ref={dropdownRef}>
                             <div
-                                className="flex items-center gap-3 border border-gray-600 rounded-full pl-1.5 pr-4 py-1.5 cursor-pointer hover:bg-gray-700/50 transition-colors group"
+                                className="flex items-center gap-2 border border-gray-600 rounded-full pl-1.5 pr-1.5 md:pr-4 py-1.5 cursor-pointer hover:bg-gray-700/50 transition-colors group"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             >
-                                <div className="bg-[var(--primary)] text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-transparent group-hover:ring-[var(--primary)]/50 transition-all">
+                                <div className="bg-[var(--primary)] text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-transparent group-hover:ring-[var(--primary)]/50 transition-all">
                                     {getInitials(user.name)}
                                 </div>
-                                <div className="flex flex-col">
+                                <div className="hidden md:flex flex-col">
                                     <span className="text-xs font-bold leading-tight text-white">{user.name}</span>
                                     <span className="text-[10px] text-gray-400 leading-tight truncate max-w-[100px]">
                                         {userTypes.length > 0 ? userTypes.map(t => t.name).join(', ') : 'Usuário'}
@@ -238,7 +231,7 @@ export function Navbar() {
                                 </div>
                                 <ChevronDown
                                     size={14}
-                                    className={`text-gray-400 group-hover:text-white transition-all duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                    className={`hidden md:block text-gray-400 group-hover:text-white transition-all duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
                                 />
                             </div>
 
