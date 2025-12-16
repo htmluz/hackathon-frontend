@@ -19,6 +19,19 @@ export default defineConfig({
         target: 'http://ec2-3-144-46-118.us-east-2.compute.amazonaws.com:8080',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('proxyRes', (proxyRes, _req, _res) => {
+            if (proxyRes.headers['set-cookie']) {
+              proxyRes.headers['set-cookie'] = proxyRes.headers['set-cookie'].map(
+                (cookie) => {
+                  return cookie
+                    .replace(/; secure/gi, '')
+                    .replace(/; domain=[^;]+/gi, '');
+                }
+              );
+            }
+          });
+        },
       },
     },
   },
