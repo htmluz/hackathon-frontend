@@ -3,7 +3,7 @@ import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle, Sparkles } fr
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { initiativesService, aiService } from "@/services/initiativesService";
 import {
@@ -225,30 +225,30 @@ Texto do usuário:`;
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="type">Tipo de Iniciativa <span className="text-red-500">*</span></Label>
-                                        <Select
-                                            id="type"
-                                            value={formData.type}
-                                            onChange={(e) => handleChange("type", e.target.value)}
-                                        >
-                                            <option value="" disabled selected>Selecione o tipo</option>
-                                            <option value="Automação">Automação</option>
-                                            <option value="Integração">Integração</option>
-                                            <option value="Melhoria">Melhoria</option>
-                                            <option value="Novo Projeto">Novo Projeto</option>
+                                        <Select value={formData.type} onValueChange={(value) => handleChange("type", value)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione o tipo" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Automação">Automação</SelectItem>
+                                                <SelectItem value="Integração">Integração</SelectItem>
+                                                <SelectItem value="Melhoria">Melhoria</SelectItem>
+                                                <SelectItem value="Novo Projeto">Novo Projeto</SelectItem>
+                                            </SelectContent>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="criticality">Criticidade / Impacto <span className="text-red-500">*</span></Label>
-                                        <Select
-                                            id="criticality"
-                                            value={formData.priority}
-                                            onChange={(e) => handleChange("priority", e.target.value)}
-                                        >
-                                            <option value="" disabled selected>Selecione a criticidade</option>
-                                            <option value="Alta">Alta</option>
-                                            <option value="Média">Média</option>
-                                            <option value="Baixa">Baixa</option>
+                                        <Select value={formData.priority} onValueChange={(value) => handleChange("priority", value)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione a criticidade" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Alta">Alta</SelectItem>
+                                                <SelectItem value="Média">Média</SelectItem>
+                                                <SelectItem value="Baixa">Baixa</SelectItem>
+                                            </SelectContent>
                                         </Select>
                                     </div>
 
@@ -296,16 +296,16 @@ Texto do usuário:`;
                             {/* Requester Sector */}
                             <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
                                 <Label htmlFor="sector" className="text-base font-semibold">Setor Solicitante</Label>
-                                <Select
-                                    id="sector"
-                                    defaultValue="rh"
-                                    value={formData.sector}
-                                    onChange={(e) => handleChange("sector", e.target.value)}
-                                >
-                                    <option value="rh">Recursos Humanos</option>
-                                    <option value="comercial">Comercial</option>
-                                    <option value="ti">Tecnologia da Informação</option>
-                                    <option value="financeiro">Financeiro</option>
+                                <Select value={formData.sector} onValueChange={(value) => handleChange("sector", value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione o setor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="rh">Recursos Humanos</SelectItem>
+                                        <SelectItem value="comercial">Comercial</SelectItem>
+                                        <SelectItem value="ti">Tecnologia da Informação</SelectItem>
+                                        <SelectItem value="financeiro">Financeiro</SelectItem>
+                                    </SelectContent>
                                 </Select>
                             </div>
 
