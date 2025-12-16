@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { initiativesService } from "@/services/initiativesService";
+import { initiativesService, aiService } from "@/services/initiativesService";
 import {
     Dialog,
     DialogContent,
@@ -37,6 +37,48 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
     };
 
     const [error, setError] = useState<string | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const DEFAULT_AI_PROMPT = `Você é um assistente especializado em análise de requisitos e desenvolvimento de produtos. Seu papel é receber a descrição inicial de uma ideia ou necessidade escrita por um usuário não técnico e melhorar esse texto.
+
+Reescreva a descrição de forma clara e objetiva, detalhando:
+
+- O problema ou necessidade que o usuário está tentando resolver.
+- O objetivo da solicitação (o que ele quer alcançar).
+- O público ou usuário final afetado.
+- O benefício ou impacto esperado.
+- Exemplo(s) de uso, se fizer sentido.
+
+Use linguagem simples, fluida e sem jargões técnicos.
+Mantenha o texto em formato corrido, pronto para ser lido por um analista de produto.
+
+Importante:
+
+- Não use nenhuma formatação Markdown.
+- Não insira títulos, subtítulos, listas ou bullets.
+- A resposta deve ser um texto contínuo, coeso e humanamente compreensível.
+
+Texto do usuário:`;
+
+    const handleAIImprove = async () => {
+        if (!formData.description.trim()) {
+            setError("Por favor, preencha a descrição antes de usar a IA.");
+            return;
+        }
+
+        setAiLoading(true);
+        setError(null);
+        try {
+            const response = await aiService.processText(formData.description, DEFAULT_AI_PROMPT);
+            handleChange("description", response.data.generated_text);
+        } catch (err: any) {
+            console.error("Error improving description with AI", err);
+            const errorMessage = err.response?.data?.error || "Ocorreu um erro ao processar o texto com IA.";
+            setError(errorMessage);
+        } finally {
+            setAiLoading(false);
+        }
+    };
 
     const handleSubmit = async () => {
         setLoading(true);
@@ -64,7 +106,7 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[1100px] h-[90vh] bg-slate-50/50 flex flex-col gap-0 p-0">
+            <DialogContent className="max-w-[1600px] h-[90vh] bg-slate-50/50 flex flex-col gap-0 p-0">
                 <DialogHeader className="px-8 py-5 bg-white border-b flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <Button
@@ -123,7 +165,29 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="description">Descrição Detalhada <span className="text-red-500">*</span></Label>
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="description">Descrição Detalhada <span className="text-red-500">*</span></Label>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={handleAIImprove}
+                                                disabled={aiLoading || !formData.description.trim()}
+                                                className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                            >
+                                                {aiLoading ? (
+                                                    <>
+                                                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                                        Processando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                                                        Melhorar com IA
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
                                         <Textarea
                                             id="description"
                                             placeholder="Descreva em detalhes a iniciativa, seus objetivos e escopo..."
@@ -161,30 +225,30 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="type">Tipo de Iniciativa <span className="text-red-500">*</span></Label>
-                                        <Select
-                                            id="type"
-                                            value={formData.type}
-                                            onChange={(e) => handleChange("type", e.target.value)}
-                                        >
-                                            <option value="" disabled selected>Selecione o tipo</option>
-                                            <option value="Automação">Automação</option>
-                                            <option value="Integração">Integração</option>
-                                            <option value="Melhoria">Melhoria</option>
-                                            <option value="Novo Projeto">Novo Projeto</option>
+                                        <Select value={formData.type} onValueChange={(value) => handleChange("type", value)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione o tipo" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Automação">Automação</SelectItem>
+                                                <SelectItem value="Integração">Integração</SelectItem>
+                                                <SelectItem value="Melhoria">Melhoria</SelectItem>
+                                                <SelectItem value="Novo Projeto">Novo Projeto</SelectItem>
+                                            </SelectContent>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="criticality">Criticidade / Impacto <span className="text-red-500">*</span></Label>
-                                        <Select
-                                            id="criticality"
-                                            value={formData.priority}
-                                            onChange={(e) => handleChange("priority", e.target.value)}
-                                        >
-                                            <option value="" disabled selected>Selecione a criticidade</option>
-                                            <option value="Alta">Alta</option>
-                                            <option value="Média">Média</option>
-                                            <option value="Baixa">Baixa</option>
+                                        <Select value={formData.priority} onValueChange={(value) => handleChange("priority", value)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione a criticidade" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Alta">Alta</SelectItem>
+                                                <SelectItem value="Média">Média</SelectItem>
+                                                <SelectItem value="Baixa">Baixa</SelectItem>
+                                            </SelectContent>
                                         </Select>
                                     </div>
 
@@ -232,16 +296,16 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
                             {/* Requester Sector */}
                             <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
                                 <Label htmlFor="sector" className="text-base font-semibold">Setor Solicitante</Label>
-                                <Select
-                                    id="sector"
-                                    defaultValue="rh"
-                                    value={formData.sector}
-                                    onChange={(e) => handleChange("sector", e.target.value)}
-                                >
-                                    <option value="rh">Recursos Humanos</option>
-                                    <option value="comercial">Comercial</option>
-                                    <option value="ti">Tecnologia da Informação</option>
-                                    <option value="financeiro">Financeiro</option>
+                                <Select value={formData.sector} onValueChange={(value) => handleChange("sector", value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione o setor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="rh">Recursos Humanos</SelectItem>
+                                        <SelectItem value="comercial">Comercial</SelectItem>
+                                        <SelectItem value="ti">Tecnologia da Informação</SelectItem>
+                                        <SelectItem value="financeiro">Financeiro</SelectItem>
+                                    </SelectContent>
                                 </Select>
                             </div>
 
