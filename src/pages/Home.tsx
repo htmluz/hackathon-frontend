@@ -31,14 +31,16 @@ export default function Home() {
     })
   ]);
 
+  /* State for notifications */
   const [notices, setNotices] = useState<Initiative[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /* State for User Permissions */
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        // Fetch initiatives that are "In Execution" to show as notices/impacts
-        // In a real scenario you might have a specific 'is_notice' flag or separate type
         const data = await initiativesService.getAll({ status: 'Em Execução' });
         setNotices(data);
       } catch (error) {
@@ -48,6 +50,20 @@ export default function Home() {
       }
     };
     fetchNotices();
+
+    // Check admin permissions
+    const storedUserTypes = localStorage.getItem('user_types');
+    if (storedUserTypes) {
+      try {
+        const types = JSON.parse(storedUserTypes);
+        const hasAdmin = Array.isArray(types) && types.some((t: any) =>
+          (t.name || "").toLowerCase().includes('admin')
+        );
+        setIsAdmin(hasAdmin);
+      } catch (e) {
+        console.error("Error parsing user types", e);
+      }
+    }
   }, []);
 
   const getStatusStyle = (status: string) => {
@@ -200,25 +216,27 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Approval Card */}
-          <div
-            onClick={() => navigate('/aprovacao')}
-            className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/20 to-transparent z-10" />
-            <img
-              src={dashboardImg}
-              alt="Aprovação"
-              className="absolute inset-0 w-full h-full object-cover transform scale-150 group-hover:scale-125 transition-transform duration-700 origin-bottom-right"
-            />
-            <div className="absolute inset-0 p-6 z-20 flex flex-col justify-center items-end text-right">
-              <h3 className="text-xl font-bold text-white mb-1">Aprovação</h3>
-              <p className="text-slate-300 text-xs w-3/4 mb-2">Valide e aprove novas demandas.</p>
-              <span className="inline-flex items-center gap-2 text-white/80 text-xs font-semibold group-hover:text-[#7ab035] transition-colors">
-                Acessar <ArrowRight className="w-3 h-3" />
-              </span>
+          {/* Approval Card - Restricted to Admins */}
+          {isAdmin && (
+            <div
+              onClick={() => navigate('/aprovacao')}
+              className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/20 to-transparent z-10" />
+              <img
+                src={dashboardImg}
+                alt="Aprovação"
+                className="absolute inset-0 w-full h-full object-cover transform scale-150 group-hover:scale-125 transition-transform duration-700 origin-bottom-right"
+              />
+              <div className="absolute inset-0 p-6 z-20 flex flex-col justify-center items-end text-right">
+                <h3 className="text-xl font-bold text-white mb-1">Aprovação</h3>
+                <p className="text-slate-300 text-xs w-3/4 mb-2">Valide e aprove novas demandas.</p>
+                <span className="inline-flex items-center gap-2 text-white/80 text-xs font-semibold group-hover:text-[#7ab035] transition-colors">
+                  Acessar <ArrowRight className="w-3 h-3" />
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Key Users Card */}
           <div
