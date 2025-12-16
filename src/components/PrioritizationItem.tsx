@@ -18,6 +18,7 @@ interface PrioritizationItemProps {
     id: string;
     item: PrioritizationItemData;
     index: number;
+    onRequestCancellation: (id: string) => void;
 }
 
 const statusConfig: Record<string, { color: string; bg: string; icon: React.ElementType }> = {
@@ -35,7 +36,7 @@ const criticalityConfig: Record<string, { color: string; bg: string }> = {
     "Baixa": { color: "text-green-700", bg: "bg-green-100" },
 };
 
-export function PrioritizationItem({ id, item, index }: PrioritizationItemProps) {
+export function PrioritizationItem({ id, item, index, onRequestCancellation }: PrioritizationItemProps) {
     const {
         attributes,
         listeners,
@@ -105,7 +106,10 @@ export function PrioritizationItem({ id, item, index }: PrioritizationItemProps)
                 </div>
 
                 <div className="col-span-2 text-right">
-                    <button className="text-xs font-medium text-red-500 hover:text-red-700 hover:underline">
+                    <button
+                        className="text-xs font-medium text-red-500 hover:text-red-700 hover:underline"
+                        onClick={() => onRequestCancellation(id)}
+                    >
                         Solicitar Cancelamento
                     </button>
                 </div>

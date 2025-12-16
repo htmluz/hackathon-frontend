@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
 import { InitiativeCard, type Initiative } from "@/components/InitiativeCard";
 import { InitiativesFilter, type FilterState, type ViewMode } from "@/components/InitiativesFilter";
 import { NewInitiativeModal } from "@/components/NewInitiativeModal";
 import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
 import { initiativesService } from "@/services/initiativesService";
+=======
+import { InitiativeCard } from "@/components/InitiativeCard";
+import { InitiativesFilter, type FilterState } from "@/components/InitiativesFilter";
+import { NewInitiativeModal } from "@/components/NewInitiativeModal";
+import { InitiativeDetailsModal } from "@/components/InitiativeDetailsModal";
+import { ReviewCancellationModal } from "@/components/ReviewCancellationModal";
+import { initiativesService, type Initiative } from "@/services/initiativesService";
+// import { toast } from "sonner"; // If we want to show errors
+>>>>>>> 299a802e82ab9cfe219b96f2a66ca4d104aa6fe4
 
 export default function InitiativesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,6 +31,10 @@ export default function InitiativesPage() {
         sector: "",
         priority: ""
     });
+
+    // Review Modal State
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [reviewAction, setReviewAction] = useState<{ requestId: number; approved: boolean } | null>(null);
 
     const fetchInitiatives = async () => {
         setLoading(true);
@@ -52,6 +66,11 @@ export default function InitiativesPage() {
         setIsModalOpen(false);
         setIsDetailsOpen(false);
         fetchInitiatives();
+    };
+
+    const handleOpenReview = (requestId: number, approved: boolean) => {
+        setReviewAction({ requestId, approved });
+        setIsReviewOpen(true);
     };
 
     return (
@@ -108,6 +127,7 @@ export default function InitiativesPage() {
                                         setSelectedInitiative(initiative);
                                         setIsDetailsOpen(true);
                                     }}
+                                    onReviewCancellation={handleOpenReview}
                                 />
                             ))}
                         </div>
@@ -124,8 +144,20 @@ export default function InitiativesPage() {
             <InitiativeDetailsModal
                 open={isDetailsOpen}
                 onOpenChange={setIsDetailsOpen}
-                initiative={selectedInitiative as any} // Type assertion to bypass slight mismatch
+                initiative={selectedInitiative}
                 onSuccess={handleSuccess}
+                onReviewCancellation={handleOpenReview}
+            />
+
+            <ReviewCancellationModal
+                open={isReviewOpen}
+                onOpenChange={setIsReviewOpen}
+                requestId={reviewAction?.requestId ?? null}
+                approved={reviewAction?.approved ?? false}
+                onSuccess={() => {
+                    fetchInitiatives();
+                    setIsDetailsOpen(false); // Close details if open
+                }}
             />
         </div>
     );

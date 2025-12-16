@@ -12,6 +12,26 @@ export interface Initiative {
     deadline?: string;
     responsible?: string; // Might come from user relation
     created_at?: string;
+    cancellation_request?: CancellationRequest;
+    owner_name?: string;
+    date?: string;
+    owner?: string;
+}
+
+
+export interface CancellationRequest {
+    id: number;
+    initiative_id?: number;
+    initiative_title?: string;
+    requested_by_user_id: number;
+    requested_by_name: string;
+    reason: string;
+    status: string;
+    reviewed_by_name?: string;
+    review_reason?: string;
+    created_at: string;
+    reviewed_at?: string;
+    time_ago?: string;
 }
 
 export interface InitiativeHistory {
@@ -22,6 +42,7 @@ export interface InitiativeHistory {
     new_status?: string;
     created_at: string;
     user_name?: string; // Optional, depends on backend
+    reason?: string;
 }
 
 export interface Comment {
@@ -83,5 +104,33 @@ export const initiativesService = {
         return response.data;
     },
 
-    // Add other methods as needed based on hackaton.json
+    requestCancellation: async (id: string | number, reason: string) => {
+        const response = await api.post(`/private/initiatives/${id}/request-cancellation`, { reason });
+        return response.data;
+    },
+
+    getCancellationRequests: async () => {
+        const response = await api.get('/private/cancellation-requests');
+        return response.data;
+    },
+
+    reviewCancellation: async (id: number, approved: boolean, reason: string) => {
+        const response = await api.post(`/private/cancellation-requests/${id}/review`, { approved, reason });
+        return response.data;
+    },
+
+    getById: async (id: number | string) => {
+        const response = await api.get(`/private/initiatives/${id}`);
+        return response.data;
+    },
+
+    getSubmitted: async () => {
+        const response = await api.get('/private/initiatives/submitted');
+        return response.data.data;
+    },
+
+    reviewInitiative: async (id: number, approved: boolean, reason: string) => {
+        const response = await api.post(`/private/initiatives/${id}/review`, { approved, reason });
+        return response.data;
+    },
 };
