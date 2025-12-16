@@ -139,3 +139,25 @@ export const initiativesService = {
         return response.data;
     }
 };
+
+export interface AIProcessTextRequest {
+    text: string;
+    prompt: string;
+}
+
+export interface AIProcessTextResponse {
+    success: true;
+    data: {
+        original_text: string;
+        generated_text: string;
+        prompt: string;
+        model: string;
+    };
+}
+
+export const aiService = {
+    processText: async (text: string, prompt: string): Promise<AIProcessTextResponse> => {
+        const response = await api.post('/private/ai/process-text', { text, prompt });
+        return response.data;
+    }
+};
