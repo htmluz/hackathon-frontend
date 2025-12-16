@@ -20,9 +20,10 @@ import { PrioritizationItem, type PrioritizationItemData } from "./Prioritizatio
 interface PrioritizationListProps {
     items: PrioritizationItemData[];
     onReorder: (newItems: PrioritizationItemData[]) => void;
+    onRequestCancellation: (id: string) => void;
 }
 
-export function PrioritizationList({ items, onReorder }: PrioritizationListProps) {
+export function PrioritizationList({ items, onReorder, onRequestCancellation }: PrioritizationListProps) {
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -67,7 +68,13 @@ export function PrioritizationList({ items, onReorder }: PrioritizationListProps
                     </div>
 
                     {items.map((item, index) => (
-                        <PrioritizationItem key={item.id} id={item.id} item={item} index={index} />
+                        <PrioritizationItem
+                            key={item.id}
+                            id={item.id}
+                            item={item}
+                            index={index}
+                            onRequestCancellation={onRequestCancellation}
+                        />
                     ))}
                 </div>
             </SortableContext>

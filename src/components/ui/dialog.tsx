@@ -7,9 +7,10 @@ interface DialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     children: React.ReactNode
+    className?: string
 }
 
-function Dialog({ open, onOpenChange, children }: DialogProps) {
+function Dialog({ open, onOpenChange, children, className }: DialogProps) {
     if (!open) return null
 
     return createPortal(
@@ -20,7 +21,10 @@ function Dialog({ open, onOpenChange, children }: DialogProps) {
                 onClick={() => onOpenChange(false)}
             />
             {/* Content */}
-            <div className="relative z-50 w-full max-w-5xl bg-white rounded-xl shadow-lg animate-in zoom-in-95 duration-200 p-0 m-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className={cn(
+                "relative z-50 w-full max-w-5xl bg-white rounded-xl shadow-lg animate-in zoom-in-95 duration-200 p-0 m-4 overflow-hidden flex flex-col max-h-[90vh]",
+                className
+            )}>
                 {children}
             </div>
         </div>,
@@ -76,4 +80,13 @@ function DialogClose({ onClick, className, ...props }: React.ComponentProps<"but
     )
 }
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose }
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+    return (
+        <div
+            className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 border-t p-6 bg-slate-50/50", className)}
+            {...props}
+        />
+    )
+}
+
+export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription, DialogClose }

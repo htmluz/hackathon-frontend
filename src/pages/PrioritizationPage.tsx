@@ -5,11 +5,14 @@ import { InitiativesFilter, type FilterState } from "@/components/InitiativesFil
 import { PrioritizationList } from "@/components/PrioritizationList";
 import { type PrioritizationItemData } from "@/components/PrioritizationItem";
 import { initiativesService } from "@/services/initiativesService";
+import { RequestCancellationModal } from "@/components/RequestCancellationModal";
 
 export default function PrioritizationPage() {
     // State
     const [items, setItems] = useState<PrioritizationItemData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
+    const [initiativeToCancel, setInitiativeToCancel] = useState<string | null>(null);
     const [filters, setFilters] = useState<FilterState>({
         search: "",
         status: "",
@@ -102,9 +105,22 @@ export default function PrioritizationPage() {
                     <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
                 </div>
             ) : (
-                <PrioritizationList items={items} onReorder={setItems} />
+                <PrioritizationList
+                    items={items}
+                    onReorder={setItems}
+                    onRequestCancellation={(id) => {
+                        setInitiativeToCancel(id);
+                        setIsCancellationModalOpen(true);
+                    }}
+                />
             )}
 
+            <RequestCancellationModal
+                open={isCancellationModalOpen}
+                onOpenChange={setIsCancellationModalOpen}
+                initiativeId={initiativeToCancel}
+                onSuccess={() => fetchInitiatives()}
+            />
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Lightbulb, Save, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, Lightbulb, Save, Send, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,8 +36,11 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const [error, setError] = useState<string | null>(null);
+
     const handleSubmit = async () => {
         setLoading(true);
+        setError(null);
         try {
             await initiativesService.create({
                 title: formData.title,
@@ -50,9 +53,10 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
             });
             onSuccess?.();
             onOpenChange(false);
-        } catch (error) {
-            console.error("Error creating initiative", error);
-            // toast error
+        } catch (err: any) {
+            console.error("Error creating initiative", err);
+            const errorMessage = err.response?.data?.error || "Ocorreu um erro ao criar a iniciativa.";
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -81,6 +85,17 @@ export function NewInitiativeModal({ open, onOpenChange, onSuccess }: NewInitiat
                 </DialogHeader>
 
                 <div className="flex-1 overflow-auto p-8">
+                    {/* Error Block */}
+                    {error && (
+                        <div className="mb-6 bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <h3 className="font-semibold text-sm">Não foi possível salvar</h3>
+                                <p className="text-sm">{error}</p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Main Form Column */}
                         <div className="lg:col-span-2 space-y-6">

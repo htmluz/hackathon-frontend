@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lightbulb, Save, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Lightbulb, Save, Loader2, Send, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { initiativesService, type Initiative, type InitiativeHistory, type Comment } from "@/services/initiativesService";
+import { initiativesService, type Initiative, type InitiativeHistory, type Comment, type CancellationRequest } from "@/services/initiativesService";
 import {
     Dialog,
     DialogContent,
@@ -20,9 +20,18 @@ interface InitiativeDetailsModalProps {
     onOpenChange: (open: boolean) => void;
     initiative: Initiative | null;
     onSuccess?: () => void;
+    cancellationRequest?: CancellationRequest | null;
+    onReviewCancellation?: (requestId: number, approved: boolean) => void;
 }
 
-export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSuccess }: InitiativeDetailsModalProps) {
+export function InitiativeDetailsModal({
+    open,
+    onOpenChange,
+    initiative,
+    onSuccess,
+    cancellationRequest,
+    onReviewCancellation
+}: InitiativeDetailsModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
@@ -34,13 +43,9 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
         sector: ""
     });
 
-
-
-    // History state
     const [history, setHistory] = useState<InitiativeHistory[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
-    // Comments state
     const [comments, setComments] = useState<Comment[]>([]);
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [newComment, setNewComment] = useState("");
@@ -58,7 +63,6 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
                 sector: initiative.sector || "rh"
             });
 
-            // Fetch History
             const fetchHistory = async () => {
                 setHistoryLoading(true);
                 try {
@@ -71,7 +75,6 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
                 }
             };
 
-            // Fetch Comments
             const fetchComments = async () => {
                 setCommentsLoading(true);
                 try {
@@ -97,7 +100,6 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
         try {
             await initiativesService.createComment(initiative.id, newComment);
             setNewComment("");
-            // Refresh comments
             const data = await initiativesService.getComments(initiative.id);
             setComments(data.data || []);
         } catch (error) {
@@ -139,6 +141,9 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
     };
 
     if (!initiative) return null;
+
+    // Use cancellationRequest prop if provided (from direct cancellation list), otherwise check embedded
+    const effectiveCancellationRequest = cancellationRequest || (initiative?.cancellation_request?.status === 'Pendente' ? initiative.cancellation_request : null);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -339,6 +344,11 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
                                                                     {entry.new_status && <span className="font-medium text-slate-700">{entry.new_status}</span>}
                                                                 </div>
                                                             )}
+                                                            {entry.reason && (
+                                                                <div className="text-xs text-slate-600 mt-1 bg-white p-2 rounded border border-slate-100 italic">
+                                                                    "{entry.reason}"
+                                                                </div>
+                                                            )}
                                                             {entry.user_name && (
                                                                 <div className="text-xs text-slate-400 mt-1">
                                                                     Por: {entry.user_name}
@@ -354,114 +364,147 @@ export function InitiativeDetailsModal({ open, onOpenChange, initiative, onSucce
                             </div>
                         </div>
 
-                        {/* Comments Section (Trâmites) */}
-                        <div className="bg-white p-6 rounded-xl border shadow-sm space-y-6">
-                            <div className="flex items-center gap-2 text-slate-800 border-b pb-4">
-                                <div className="p-1.5 bg-green-50 rounded-md">
-                                    <span className="text-lg">💬</span>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-lg">Trâmites</h3>
-                                </div>
-                            </div>
+                        {/* Sidebar Column */}
+                        <div className="flex flex-col gap-6">
 
-                            {/* Comments List */}
-                            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                                {commentsLoading ? (
-                                    <div className="text-center py-4">
-                                        <Loader2 className="w-6 h-6 animate-spin text-slate-400 mx-auto" />
-                                        <p className="text-xs text-slate-400 mt-2">Carregando trâmites...</p>
-                                    </div>
-                                ) : comments.length === 0 ? (
-                                    <div className="text-center py-4 text-slate-500 text-sm bg-slate-50 rounded-lg">
-                                        Nenhum trâmite registrado.
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {comments.map((comment) => (
-                                            <div key={comment.id} className="bg-slate-50 rounded-lg p-3 space-y-2">
-                                                <div className="flex justify-between items-start">
-                                                    <span className="font-semibold text-slate-900 text-sm">{comment.user_name}</span>
-                                                    <span className="text-xs text-slate-400">{new Date(comment.created_at).toLocaleString()}</span>
-                                                </div>
-                                                <p className="text-sm text-slate-600 whitespace-pre-wrap">{comment.content}</p>
+                            {/* Actions */}
+                            <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+                                <h3 className="font-semibold text-base">Ações</h3>
+
+                                {effectiveCancellationRequest && onReviewCancellation ? (
+                                    <div className="space-y-4">
+                                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm space-y-2">
+                                            <div className="flex items-center gap-2 text-red-800 font-semibold">
+                                                <AlertTriangle className="w-4 h-4" />
+                                                <span>Solicitação de Cancelamento</span>
                                             </div>
-                                        ))}
+                                            <p className="text-red-700 italic">"{effectiveCancellationRequest.reason}"</p>
+                                            <div className="text-xs text-red-600">
+                                                Por: {effectiveCancellationRequest.requested_by_name}
+                                                {effectiveCancellationRequest.time_ago && ` • ${effectiveCancellationRequest.time_ago}`}
+                                                {effectiveCancellationRequest.created_at && !effectiveCancellationRequest.time_ago && ` • ${new Date(effectiveCancellationRequest.created_at).toLocaleDateString()}`}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button
+                                                className="bg-green-600 hover:bg-green-700 text-white w-full"
+                                                onClick={() => onReviewCancellation(effectiveCancellationRequest.id, true)}
+                                            >
+                                                <CheckCircle className="w-4 h-4 mr-2" />
+                                                Aprovar
+                                            </Button>
+                                            <Button
+                                                className="bg-red-600 hover:bg-red-700 text-white w-full"
+                                                onClick={() => onReviewCancellation(effectiveCancellationRequest.id, false)}
+                                            >
+                                                <XCircle className="w-4 h-4 mr-2" />
+                                                Reprovar
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : isEditable ? (
+                                    <>
+                                        <Button
+                                            className="w-full bg-[#7ab035] hover:bg-[#6a992d] text-white font-semibold h-11"
+                                            onClick={handleSubmit}
+                                            disabled={loading}
+                                        >
+                                            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                                            Salvar Alterações
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg text-sm text-slate-500 text-center">
+                                        Esta iniciativa não pode ser editada pois seu status é <strong>{initiative.status}</strong>.
                                     </div>
                                 )}
+
+                                <Button
+                                    variant="outline"
+                                    className="w-full text-slate-600 h-11"
+                                    onClick={() => onOpenChange(false)}
+                                >
+                                    Fechar
+                                </Button>
                             </div>
 
-                            {/* New Comment Input */}
-                            <div className="space-y-3 pt-4 border-t">
-                                <Textarea
-                                    placeholder="Digite um novo trâmite/comentário..."
-                                    className="min-h-[80px] bg-slate-50"
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                />
-                                <div className="flex justify-end">
-                                    <Button
-                                        size="sm"
-                                        className="bg-[#7ab035] hover:bg-[#6a992d] text-white"
-                                        onClick={handleSendComment}
-                                        disabled={commentSending || !newComment.trim()}
-                                    >
-                                        {commentSending ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Send className="w-3 h-3 mr-2" />}
-                                        Enviar Trâmite
-                                    </Button>
+                            {/* Comments Section (Trâmites) */}
+                            <div className="bg-white p-6 rounded-xl border shadow-sm space-y-6">
+                                <div className="flex items-center gap-2 text-slate-800 border-b pb-4">
+                                    <div className="p-1.5 bg-green-50 rounded-md">
+                                        <span className="text-lg">💬</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-lg">Trâmites</h3>
+                                    </div>
+                                </div>
+
+                                {/* Comments List */}
+                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                                    {commentsLoading ? (
+                                        <div className="text-center py-4">
+                                            <Loader2 className="w-6 h-6 animate-spin text-slate-400 mx-auto" />
+                                            <p className="text-xs text-slate-400 mt-2">Carregando trâmites...</p>
+                                        </div>
+                                    ) : comments.length === 0 ? (
+                                        <div className="text-center py-4 text-slate-500 text-sm bg-slate-50 rounded-lg">
+                                            Nenhum trâmite registrado.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {comments.map((comment) => (
+                                                <div key={comment.id} className="bg-slate-50 rounded-lg p-3 space-y-2">
+                                                    <div className="flex justify-between items-start">
+                                                        <span className="font-semibold text-slate-900 text-sm">{comment.user_name}</span>
+                                                        <span className="text-xs text-slate-400">{new Date(comment.created_at).toLocaleString()}</span>
+                                                    </div>
+                                                    <p className="text-sm text-slate-600 whitespace-pre-wrap">{comment.content}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* New Comment Input */}
+                                <div className="space-y-3 pt-4 border-t">
+                                    <Textarea
+                                        placeholder="Digite um novo trâmite/comentário..."
+                                        className="min-h-[80px] bg-slate-50"
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                    />
+                                    <div className="flex justify-end">
+                                        <Button
+                                            size="sm"
+                                            className="bg-[#7ab035] hover:bg-[#6a992d] text-white"
+                                            onClick={handleSendComment}
+                                            disabled={commentSending || !newComment.trim()}
+                                        >
+                                            {commentSending ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Send className="w-3 h-3 mr-2" />}
+                                            Enviar Trâmite
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Sidebar Column */}
-                    <div className="flex flex-col gap-6">
-
-
-                        {/* Actions */}
-                        <div className="bg-white mt-6 p-6 rounded-xl border shadow-sm space-y-4">
-                            <h3 className="font-semibold text-base">Ações</h3>
-
-                            {isEditable ? (
-                                <>
-                                    <Button
-                                        className="w-full bg-[#7ab035] hover:bg-[#6a992d] text-white font-semibold h-11"
-                                        onClick={handleSubmit}
-                                        disabled={loading}
-                                    >
-                                        {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                                        Salvar Alterações
-                                    </Button>
-                                </>
-                            ) : (
-                                <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg text-sm text-slate-500 text-center">
-                                    Esta iniciativa não pode ser editada pois seu status é <strong>{initiative.status}</strong>.
+                            {/* Tips Section */}
+                            {isEditable && (
+                                <div className="bg-[#f0fdf4] p-6 rounded-xl border border-green-100 space-y-4">
+                                    <div className="flex items-center gap-2 text-green-800 font-semibold">
+                                        <Lightbulb className="w-5 h-5" />
+                                        <h3>Dicas</h3>
+                                    </div>
+                                    <p className="text-sm text-green-700">
+                                        Mantenha as informações atualizadas para facilitar a aprovação.
+                                    </p>
                                 </div>
                             )}
 
-                            <Button
-                                variant="outline"
-                                className="w-full text-slate-600 h-11"
-                                onClick={() => onOpenChange(false)}
-                            >
-                                Fechar
-                            </Button>
                         </div>
-
-                        {isEditable && (
-                            <div className="bg-[#f0fdf4] p-6 rounded-xl border border-green-100 space-y-4">
-                                <div className="flex items-center gap-2 text-green-800 font-semibold">
-                                    <Lightbulb className="w-5 h-5" />
-                                    <h3>Dicas</h3>
-                                </div>
-                                <p className="text-sm text-green-700">
-                                    Mantenha as informações atualizadas para facilitar a aprovação.
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 }
