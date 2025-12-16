@@ -4,6 +4,7 @@ import {
     LayoutGrid,
     FileText,
     Users,
+    Settings,
     ListOrdered,
     HelpCircle,
     Bell,
@@ -196,8 +197,8 @@ export function Navbar() {
                     )}
                     {isAdmin && (
                         <NavItem
-                            icon={<Users size={18} />}
-                            label="Usuários"
+                            icon={<Settings size={18} />}
+                            label="Configurações"
                             active={location.pathname === '/users'}
                             onClick={() => navigate('/users')}
                         />

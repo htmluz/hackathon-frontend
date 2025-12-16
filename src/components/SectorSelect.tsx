@@ -39,17 +39,17 @@ export function SectorSelect({ value, onChange, disabled }: SectorSelectProps) {
 
     return (
         <div className="space-y-2">
-            <Label>Setor</Label>
+            <Label>Setor <span className="text-red-500">*</span></Label>
             <Select
-                value={value?.toString() || "no-sector"}
-                onValueChange={(val) => onChange(val === "no-sector" ? null : Number(val))}
+                value={value?.toString()}
+                onValueChange={(val) => onChange(Number(val))}
                 disabled={disabled}
+                required
             >
                 <SelectTrigger>
                     <SelectValue placeholder="Selecione um setor" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="no-sector">Sem setor</SelectItem>
                     {sectors.map((sector) => (
                         <SelectItem key={sector.id} value={sector.id.toString()}>
                             {sector.name}

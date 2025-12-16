@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { Search, Grid, List as ListIcon, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { sectorsService, type Sector } from "@/services/sectorsService";
 
 export interface FilterState {
     search: string;
@@ -20,6 +22,28 @@ interface InitiativesFilterProps {
 }
 
 export function InitiativesFilter({ filters, onFilterChange, viewMode, onViewChange }: InitiativesFilterProps) {
+    const [sectors, setSectors] = useState<Sector[]>([]);
+    const [canFilterSector, setCanFilterSector] = useState(false);
+
+    useEffect(() => {
+        const loadFilterData = async () => {
+            try {
+                // Check permissions
+                const userTypes = JSON.parse(localStorage.getItem('user_types') || '[]');
+                const hasPermission = userTypes.some((t: any) => t.name === 'admin' || t.name === 'manager');
+                setCanFilterSector(hasPermission);
+
+                if (hasPermission) {
+                    const data = await sectorsService.getAll(true);
+                    setSectors(data);
+                }
+            } catch (error) {
+                console.error("Failed to load filter data", error);
+            }
+        };
+        loadFilterData();
+    }, []);
+
     const handleChange = (field: keyof FilterState, value: string) => {
         onFilterChange({ ...filters, [field]: value });
     };
@@ -43,6 +67,7 @@ export function InitiativesFilter({ filters, onFilterChange, viewMode, onViewCha
                 </div>
 
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                    {/* Status Filter */}
                     <div className="relative min-w-[160px]">
                         <select
                             className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-slate-600 cursor-pointer appearance-none"
@@ -60,6 +85,7 @@ export function InitiativesFilter({ filters, onFilterChange, viewMode, onViewCha
                         <ChevronIcon />
                     </div>
 
+                    {/* Type Filter */}
                     <div className="relative min-w-[160px]">
                         <select
                             className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-slate-600 cursor-pointer appearance-none"
@@ -75,20 +101,25 @@ export function InitiativesFilter({ filters, onFilterChange, viewMode, onViewCha
                         <ChevronIcon />
                     </div>
 
-                    <div className="relative min-w-[160px]">
-                        <select
-                            className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-slate-600 cursor-pointer appearance-none"
-                            value={filters.sector}
-                            onChange={(e) => handleChange("sector", e.target.value)}
-                        >
-                            <option value="">Todos os setores</option>
-                            <option value="Recursos Humanos">Recursos Humanos</option>
-                            <option value="Comercial">Comercial</option>
-                            <option value="Tecnologia da Informação">TI</option>
-                            <option value="Financeiro">Financeiro</option>
-                        </select>
-                        <ChevronIcon />
-                    </div>
+                    {/* Sector Filter - Dynamic & Restricted */}
+                    {canFilterSector && (
+                        <div className="relative min-w-[160px]">
+                            <select
+                                className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-slate-600 cursor-pointer appearance-none"
+                                value={filters.sector}
+                                onChange={(e) => handleChange("sector", e.target.value)}
+                            >
+                                <option value="">Todos os setores</option>
+                                {sectors.map((sector) => (
+                                    <option key={sector.id} value={sector.name}>
+                                        {sector.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronIcon />
+                        </div>
+                    )}
+
                     <div className="relative min-w-[160px]">
                         <select
                             className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-slate-600 cursor-pointer appearance-none"

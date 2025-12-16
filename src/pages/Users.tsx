@@ -180,6 +180,12 @@ function Users() {
     const confirmEditUser = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!userToEdit) return
+
+        if (!editUserForm.sector_id) {
+            alert("Por favor, selecione um setor para o usuário.");
+            return;
+        }
+
         setEditUserLoading(true)
         try {
             const payload: Partial<EditUserForm> = {
@@ -220,6 +226,12 @@ function Users() {
 
     const confirmCreateUser = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (!createUserForm.sector_id) {
+            alert("Por favor, selecione um setor para o usuário.");
+            return;
+        }
+
         setCreateUserLoading(true)
         try {
             await apiClient.post('/private/users', {
