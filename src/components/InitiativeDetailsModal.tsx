@@ -163,10 +163,33 @@ export function InitiativeDetailsModal({
         }
     }, [open]);
 
+    const [statusUpdating, setStatusUpdating] = useState(false);
+    const STEPS = ["Submetida", "Aprovada", "Em Análise", "Em Execução", "Concluída"];
+
+    const handleStatusUpdate = async (newStatus: string) => {
+        if (!initiative || statusUpdating) return;
+
+        // If clicking the same status, do nothing
+        if (initiative.status === newStatus) return;
+
+        setStatusUpdating(true);
+        try {
+            await initiativesService.updateStatus(initiative.id, newStatus, "Alteração de status via roadmap");
+            onSuccess?.();
+        } catch (error) {
+            console.error("Failed to update status", error);
+        } finally {
+            setStatusUpdating(false);
+        }
+    };
+
     if (!initiative) return null;
 
     // Use cancellationRequest prop if provided (from direct cancellation list), otherwise check embedded
     const effectiveCancellationRequest = cancellationRequest || (initiative?.cancellation_request?.status === 'Pendente' ? initiative.cancellation_request : null);
+
+    const currentStepIndex = STEPS.indexOf(initiative.status);
+    const isOffRoadmap = currentStepIndex === -1;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -210,6 +233,72 @@ export function InitiativeDetailsModal({
                 </DialogHeader>
 
                 <div className="flex-1 overflow-auto p-8">
+                    {/* Roadmap Section */}
+                    <div className="bg-white p-6 rounded-xl border shadow-sm mb-8">
+                        <div className="flex items-center gap-2 text-slate-800 mb-6">
+                            <div className="p-1.5 bg-blue-50 rounded-md">
+                                <span className="text-lg">🗺️</span>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-lg">Roadmap de Execução</h3>
+                                <p className="text-sm text-slate-500">Acompanhe a evolução da iniciativa</p>
+                            </div>
+                        </div>
+
+                        <div className="relative flex justify-between items-center px-4">
+                            {/* Connecting Line */}
+                            <div className="absolute top-4 left-0 w-full h-0.5 bg-slate-100 -z-0" />
+                            <div
+                                className="absolute top-4 left-0 h-0.5 bg-green-600 transition-all duration-500 -z-0"
+                                style={{ width: isOffRoadmap ? '0%' : `${(currentStepIndex / (STEPS.length - 1)) * 100}%` }}
+                            />
+
+                            {STEPS.map((step, index) => {
+                                const isCompleted = !isOffRoadmap && index <= currentStepIndex;
+                                const isActive = !isOffRoadmap && index === currentStepIndex;
+                                const isClickable = canReview && !statusUpdating;
+
+                                return (
+                                    <div key={step} className="relative z-10 flex flex-col items-center gap-2 group">
+                                        <button
+                                            disabled={!isClickable}
+                                            onClick={() => handleStatusUpdate(step)}
+                                            className={cn(
+                                                "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 bg-white",
+                                                isActive ? "border-green-600 text-green-600 scale-110 shadow-md ring-4 ring-green-50" :
+                                                    isCompleted ? "bg-green-600 border-green-600 text-white" :
+                                                        "border-slate-200 text-slate-300",
+                                                isClickable && !isActive && "group-hover:border-green-400 group-hover:text-green-400 cursor-pointer"
+                                            )}
+                                        >
+                                            {statusUpdating && isActive ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : isCompleted ? (
+                                                <CheckCircle className="w-5 h-5" />
+                                            ) : (
+                                                <span className="text-xs font-semibold">{index + 1}</span>
+                                            )}
+                                        </button>
+                                        <span className={cn(
+                                            "text-xs font-medium whitespace-nowrap transition-colors duration-300",
+                                            isActive ? "text-green-700" :
+                                                isCompleted ? "text-slate-600" : "text-slate-400"
+                                        )}>
+                                            {step}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {isOffRoadmap && (
+                            <div className="mt-6 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-center justify-center gap-2 text-orange-800 text-sm">
+                                <AlertTriangle className="w-4 h-4" />
+                                <span>Status atual: <strong>{initiative.status}</strong> (Fora do fluxo padrão)</span>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Main Form Column */}
                         <div className="lg:col-span-2 space-y-6">

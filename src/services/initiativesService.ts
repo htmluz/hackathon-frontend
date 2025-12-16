@@ -133,4 +133,9 @@ export const initiativesService = {
         const response = await api.post(`/private/initiatives/${id}/review`, { approved, reason });
         return response.data;
     },
+
+    updateStatus: async (id: number, status: string, reason?: string) => {
+        const response = await api.patch(`/private/initiatives/${id}/status`, { status, reason });
+        return response.data;
+    }
 };

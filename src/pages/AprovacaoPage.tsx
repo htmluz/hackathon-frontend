@@ -206,30 +206,27 @@ export default function AprovacaoPage() {
                                                     "{request.reason}"
                                                 </div>
 
-                                                <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex gap-2 justify-end pt-3 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
                                                     <Button
                                                         size="sm"
-                                                        variant="ghost"
-                                                        className="h-8 w-8 p-0 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+                                                        className="h-8 bg-green-600 hover:bg-green-700 text-white text-xs px-3"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleOpenReview(request.id, true);
                                                         }}
-                                                        title="Aprovar Cancelamento"
                                                     >
-                                                        <CheckCircle className="w-4 h-4" />
+                                                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Aprovar
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        variant="ghost"
-                                                        className="h-8 w-8 p-0 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                                        variant="destructive"
+                                                        className="h-8 text-xs px-3"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleOpenReview(request.id, false);
                                                         }}
-                                                        title="Reprovar Cancelamento"
                                                     >
-                                                        <XCircle className="w-4 h-4" />
+                                                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> Reprovar
                                                     </Button>
                                                 </div>
                                             </div>
