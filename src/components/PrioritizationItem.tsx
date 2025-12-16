@@ -18,6 +18,7 @@ interface PrioritizationItemProps {
     id: string;
     item: PrioritizationItemData;
     index: number;
+    disabled?: boolean;
     onRequestCancellation: (id: string) => void;
 }
 
@@ -36,7 +37,7 @@ const criticalityConfig: Record<string, { color: string; bg: string }> = {
     "Baixa": { color: "text-green-700", bg: "bg-green-100" },
 };
 
-export function PrioritizationItem({ id, item, index, onRequestCancellation }: PrioritizationItemProps) {
+export function PrioritizationItem({ id, item, index, disabled, onRequestCancellation }: PrioritizationItemProps) {
     const {
         attributes,
         listeners,
@@ -44,7 +45,7 @@ export function PrioritizationItem({ id, item, index, onRequestCancellation }: P
         transform,
         transition,
         isDragging,
-    } = useSortable({ id });
+    } = useSortable({ id, disabled });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -63,10 +64,18 @@ export function PrioritizationItem({ id, item, index, onRequestCancellation }: P
             style={style}
             className={cn(
                 "flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-lg mb-3 shadow-sm select-none",
-                isDragging && "shadow-xl border-green-500 bg-green-50 scale-[1.02]"
+                isDragging && "shadow-xl border-green-500 bg-green-50 scale-[1.02]",
+                disabled && "opacity-75 bg-slate-50 border-slate-100" // Visual cue for locked
             )}
         >
-            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600">
+            <div
+                {...attributes}
+                {...listeners}
+                className={cn(
+                    "text-slate-400 hover:text-slate-600",
+                    !disabled ? "cursor-grab active:cursor-grabbing" : "cursor-not-allowed opacity-50"
+                )}
+            >
                 <GripVertical className="w-5 h-5" />
             </div>
 

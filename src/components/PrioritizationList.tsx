@@ -19,11 +19,12 @@ import { PrioritizationItem, type PrioritizationItemData } from "./Prioritizatio
 
 interface PrioritizationListProps {
     items: PrioritizationItemData[];
+    disabled?: boolean;
     onReorder: (newItems: PrioritizationItemData[]) => void;
     onRequestCancellation: (id: string) => void;
 }
 
-export function PrioritizationList({ items, onReorder, onRequestCancellation }: PrioritizationListProps) {
+export function PrioritizationList({ items, disabled, onReorder, onRequestCancellation }: PrioritizationListProps) {
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -73,6 +74,7 @@ export function PrioritizationList({ items, onReorder, onRequestCancellation }: 
                             id={item.id}
                             item={item}
                             index={index}
+                            disabled={disabled}
                             onRequestCancellation={onRequestCancellation}
                         />
                     ))}
