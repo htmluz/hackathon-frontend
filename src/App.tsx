@@ -6,6 +6,7 @@ import Users from './pages/Users'
 import InitiativesPage from './pages/InitiativesPage'
 import PrioritizationPage from './pages/PrioritizationPage'
 import AprovacaoPage from './pages/AprovacaoPage'
+import KeyUsersPage from './pages/KeyUsersPage'
 import FAQ from './pages/FAQ'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Navbar } from './components/Navbar'
@@ -57,6 +58,11 @@ function App() {
           <Route path="/aprovacao" element={
             <ProtectedRoute>
               <AprovacaoPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/key-users" element={
+            <ProtectedRoute>
+              <KeyUsersPage />
             </ProtectedRoute>
           } />
         </Routes>

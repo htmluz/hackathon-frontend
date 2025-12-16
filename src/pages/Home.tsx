@@ -152,11 +152,11 @@ export default function Home() {
       </section>
 
       {/* Section: Visual Navigation (Hero Cards) */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[400px]">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[600px]">
         {/* Large Main Card */}
         <div
           onClick={() => navigate('/iniciativas')}
-          className="lg:col-span-7 relative group rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
+          className="lg:col-span-8 relative group rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
           <img
@@ -179,29 +179,52 @@ export default function Home() {
         </div>
 
         {/* Right Column Cards */}
-        <div className="lg:col-span-5 flex flex-col gap-6 h-full">
-          {/* Top Card */}
+        <div className="lg:col-span-4 flex flex-col gap-4 h-full">
+          {/* Prioritization Card */}
           <div
-            onClick={() => navigate('/iniciativas?new=true')}
+            onClick={() => navigate('/priorizacao')}
             className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
           >
             <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/20 to-transparent z-10" />
             <img
               src={registrationImg}
-              alt="Cadastro"
+              alt="Priorização"
               className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 p-6 z-20 flex flex-col justify-center items-end text-right">
-              <h3 className="text-2xl font-bold text-white mb-2">Formulário de Cadastro</h3>
-              <p className="text-slate-300 text-xs w-2/3 mb-4">Acesso exclusivo para os Key Users registrarem novas demandas.</p>
+              <h3 className="text-xl font-bold text-white mb-1">Priorização</h3>
+              <p className="text-slate-300 text-xs w-3/4 mb-2">Defina o que é mais importante para o negócio.</p>
               <span className="inline-flex items-center gap-2 text-white/80 text-xs font-semibold group-hover:text-[#7ab035] transition-colors">
-                Cadastrar iniciativa <ArrowRight className="w-3 h-3" />
+                Acessar <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
 
-          {/* Bottom Card */}
-          <div className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300">
+          {/* Approval Card */}
+          <div
+            onClick={() => navigate('/aprovacao')}
+            className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
+          >
+            <div className="absolute inset-0 bg-gradient-to-l from-black/80 via-black/20 to-transparent z-10" />
+            <img
+              src={dashboardImg}
+              alt="Aprovação"
+              className="absolute inset-0 w-full h-full object-cover transform scale-150 group-hover:scale-125 transition-transform duration-700 origin-bottom-right"
+            />
+            <div className="absolute inset-0 p-6 z-20 flex flex-col justify-center items-end text-right">
+              <h3 className="text-xl font-bold text-white mb-1">Aprovação</h3>
+              <p className="text-slate-300 text-xs w-3/4 mb-2">Valide e aprove novas demandas.</p>
+              <span className="inline-flex items-center gap-2 text-white/80 text-xs font-semibold group-hover:text-[#7ab035] transition-colors">
+                Acessar <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </div>
+
+          {/* Key Users Card */}
+          <div
+            onClick={() => navigate('/key-users')}
+            className="flex-1 relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
+          >
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent z-10" />
             <img
               src={teamImg}
@@ -209,13 +232,13 @@ export default function Home() {
               className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute bottom-0 left-0 p-6 z-20">
-              <div className="flex items-center gap-3 mb-2">
-                <Users className="w-5 h-5 text-[#7ab035]" />
-                <h3 className="text-xl font-bold text-white">Key Users</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="w-4 h-4 text-[#7ab035]" />
+                <h3 className="text-lg font-bold text-white">Key Users</h3>
               </div>
-              <p className="text-slate-400 text-xs">Responsáveis pelos sistemas corporativos e aprovações.</p>
-              <span className="inline-flex items-center gap-2 text-white/60 text-xs mt-3 group-hover:text-white transition-colors">
-                Ver equipe <ArrowRight className="w-3 h-3" />
+              <p className="text-slate-400 text-[10px]">Listagem de usuários e contatos (Leitura).</p>
+              <span className="inline-flex items-center gap-2 text-white/60 text-xs mt-2 group-hover:text-white transition-colors">
+                Ver lista <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
