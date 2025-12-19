@@ -164,7 +164,7 @@ export function InitiativeDetailsModal({
     }, [open]);
 
     const [statusUpdating, setStatusUpdating] = useState(false);
-    const STEPS = ["Submetida", "Aprovada", "Em Análise", "Em Execução", "Concluída"];
+    const STEPS = ["Submetida", "Aprovada", "Em Análise", "Em Execução", "Em Homologação", "Concluída"];
 
     const handleStatusUpdate = async (newStatus: string) => {
         if (!initiative || statusUpdating) return;
