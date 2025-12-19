@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Info, Save, Loader2, Lock, Unlock, AlertTriangle } from "lucide-react";
+import { Info, Save, Loader2, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PrioritizationList } from "@/components/PrioritizationList";
 import { type PrioritizationItemData } from "@/components/PrioritizationItem";
 import { prioritizationService, type PrioritizationData, type AdminAllPrioritizations } from "@/services/prioritizationService";
 import { RequestChangeModal } from "@/components/RequestChangeModal";
 import { ChangeRequestsModal } from "@/components/ChangeRequestsModal";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { RequestCancellationModal } from "@/components/RequestCancellationModal";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Helper for permission checking
 const checkUserPermissions = () => {
@@ -44,7 +44,7 @@ const checkUserPermissions = () => {
 
 export default function PrioritizationPage() {
     // --- State ---
-    const [year, setYear] = useState(2025);
+    const [year] = useState(2025);
     const [items, setItems] = useState<PrioritizationItemData[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLocked, setIsLocked] = useState(false);
@@ -56,6 +56,8 @@ export default function PrioritizationPage() {
     // Modals
     const [requestChangeModalOpen, setRequestChangeModalOpen] = useState(false);
     const [changeRequestsModalOpen, setChangeRequestsModalOpen] = useState(false);
+    const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
+    const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
 
     // --- Effects ---
     useEffect(() => {
@@ -158,6 +160,11 @@ export default function PrioritizationPage() {
         }
     };
 
+    const handleRequestCancellation = (id: string) => {
+        setSelectedInitiativeId(id);
+        setCancellationModalOpen(true);
+    };
+
     // --- Render ---
     return (
         <div className="min-h-screen bg-slate-50/50 p-6 space-y-6 max-w-7xl mx-auto">
@@ -244,7 +251,7 @@ export default function PrioritizationPage() {
                                 items={items}
                                 onReorder={setItems}
                                 disabled={false} // Admin never locked
-                                onRequestCancellation={() => { }}
+                                onRequestCancellation={handleRequestCancellation}
                             />
                         )}
                     </div>
@@ -260,7 +267,7 @@ export default function PrioritizationPage() {
                             items={items}
                             onReorder={setItems}
                             disabled={isLocked}
-                            onRequestCancellation={() => { }} // User can only reorder here
+                            onRequestCancellation={handleRequestCancellation}
                         />
                     )}
                 </div>
@@ -284,6 +291,17 @@ export default function PrioritizationPage() {
                 onRequestProcessed={() => {
                     // Refresh data if needed
                     if (activeTab === 'global') fetchGlobalPrioritization();
+                }}
+            />
+
+            <RequestCancellationModal
+                open={cancellationModalOpen}
+                onOpenChange={setCancellationModalOpen}
+                initiativeId={selectedInitiativeId}
+                onSuccess={() => {
+                    // Refresh data
+                    if (isAdmin && activeTab === 'global') fetchGlobalPrioritization();
+                    else fetchMyPrioritization();
                 }}
             />
         </div>
